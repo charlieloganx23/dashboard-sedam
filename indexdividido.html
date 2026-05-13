@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>Monitoramento TAG Sedam 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+<script src="config.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="p-2 md:p-4">
+<img src="assets/bandeira-ro.png" id="bandeiraFlutuante">
+
+<!-- 001 LOGIN -->
+<div id="login-screen" class="min-h-screen flex items-center justify-center">
+<div class="bg-slate-900/70 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-2xl w-full max-w-xs text-center">
+<h1 class="text-xl font-black text-blue-400 mb-6 uppercase">TAG Sedam-RO</h1>
+<input type="text" id="u" placeholder="Usuário" class="w-full p-3 mb-3 bg-slate-800 rounded-lg text-white text-sm">
+<input type="password" id="p" placeholder="Senha" class="w-full p-3 mb-4 bg-slate-800 rounded-lg text-white text-sm">
+<button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold text-sm">ACESSAR PAINEL</button>
+</div>
+</div>
+
+<!-- 002 DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+<header class="flex justify-between items-center mb-4 px-2">
+
+<div>
+<h2 class="text-lg font-black text-blue-400 leading-none tracking-tighter uppercase">
+Painel de Auditoria TAG 2026
+</h2>
+<p id="user-info" class="text-[9px] text-slate-500 mt-1 uppercase italic"></p>
+</div>
+
+<div class="flex items-center gap-4">
+
+<div id="pdf-container" class="flex items-center gap-2"></div>
+
+<div id="backup-container" class="flex items-center gap-2 min-w-[140px]"></div>
+
+<div class="text-right border-l border-white/10 pl-4">
+<span class="block text-[7px] text-slate-500 font-bold uppercase">
+Média Geral TAG
+</span>
+<span id="total-geral" class="text-2xl font-black text-emerald-400">
+0%
+</span>
+</div>
+
+<button onclick="logout()" class="text-[11px] bg-red-700 hover:bg-red-800 text-white font-black px-4 py-2 rounded-xl shadow-lg">
+SAIR
+</button>
+
+</div>
+
+</header>
+
+<!-- 003 MENU -->
+<nav class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2 mb-4">
+
+<button onclick="switchTab('resumo')" id="tab-resumo" class="tab-btn tab-active">
+<div>📊</div>
+<div>Resumo</div>
+</button>
+
+<button onclick="switchTab('mensal')" id="tab-mensal" class="tab-btn">
+<div>📑</div>
+<div>Monitoramento</div>
+</button>
+
+<button onclick="switchTab('analise')" id="tab-analise" class="tab-btn">
+<div>📈</div>
+<div>Gráficos</div>
+</button>
+
+<button onclick="switchTab('concluidos')" id="tab-concluidos" class="tab-btn">
+<div>🏆</div>
+<div>100% Cumpridos</div>
+</button>
+
+<button id="tab-perfis" onclick="switchTab('perfis')" class="tab-btn hidden">
+<div>👥</div>
+<div>Perfis Sedam</div>
+</button>
+
+<button id="tab-tcero" onclick="switchTab('tcero')" class="tab-btn hidden">
+<div>🛡️</div>
+<div>Perfis TCE-RO</div>
+</button>
+
+<button id="tab-usuarios" onclick="switchTab('usuarios')" class="tab-btn">
+<div>👤</div>
+<div>Usuários Sedam</div>
+</button>
+
+</nav>
+
+<!-- 004 FILTROS -->
+<div class="flex gap-2 mb-3 items-center justify-between">
+
+<div class="flex gap-2">
+<button onclick="modoResumo='subitem';renderResumo()" class="text-xs bg-blue-600 px-2 py-1 rounded">
+SUBITEM
+</button>
+</div>
+
+<div class="flex gap-2 items-center">
+
+<input id="dataInicio" type="date" onchange="aplicarFiltroData()" class="text-xs bg-slate-800 px-2 py-1 rounded">
+
+<input id="dataFim" type="date" onchange="aplicarFiltroData()" class="text-xs bg-slate-800 px-2 py-1 rounded">
+
+<button onclick="limparFiltroData()" class="text-xs bg-slate-600 px-2 py-1 rounded">
+LIMPAR
+</button>
+
+<button onclick="toggleOcultarConcluidos()" id="btn-ocultar" class="text-xs bg-slate-700 px-2 py-1 rounded">
+OCULTAR 100%
+</button>
+
+</div>
+
+</div>
+
+<!-- 005 RESUMO -->
+<div id="view-resumo" class="tab-view">
+<div id="cards-container" class="grid grid-cols-6 sm:grid-cols-12 md:grid-cols-16 lg:grid-cols-20 2xl:grid-cols-28 gap-1"></div>
+</div>
+
+<!-- 006 VOLTAR -->
+<button id="btn-voltar" onclick="fecharDrill()" style="display:none" class="mb-2 text-xs bg-red-600 px-2 py-1 rounded">
+← VOLTAR
+</button>
+
+<!-- 007 MONITORAMENTO -->
+<div id="view-mensal" class="tab-view hidden">
+<div class="bg-slate-900/40 rounded-xl border border-white/5 overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[1400px]">
+<thead>
+<tr class="text-[8px] text-slate-500 uppercase border-b border-white/10">
+<th>Sub-Item</th>
+<th>Descrição</th>
+<th>Produtos</th>
+<th>Responsável(is)</th>
+<th>Setor</th>
+<th>Data Início</th>
+<th class="opacity-40">JAN</th>
+<th class="opacity-40">FEV</th>
+<th class="opacity-40">MAR</th>
+<th class="text-blue-400">ABR</th>
+<th class="text-yellow-400">MAI</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody id="table-body" class="text-[10px]"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 008 ANALISE -->
+<div id="view-analise" class="tab-view hidden">
+
+<select id="tipoGrafico" class="hidden">
+<option value="subitem" selected>POR SUBITEM</option>
+</select>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+
+<select id="filtroItem" class="bg-slate-800 p-2 rounded text-sm"></select>
+
+<select id="filtroSubitem" class="bg-slate-800 p-2 rounded text-sm"></select>
+
+</div>
+
+<div class="bg-slate-900/40 p-4 rounded-xl mb-4">
+
+<canvas id="chartMaster"></canvas>
+
+<div id="descSubitem"></div>
+
+</div>
+
+<div id="ranking" class="mt-6 text-xs"></div>
+
+</div>
+
+<!-- 009 CONCLUIDOS -->
+<div id="view-concluidos" class="tab-view hidden">
+
+<div id="concluidos-container" class="grid grid-cols-6 sm:grid-cols-12 lg:grid-cols-18 gap-1 mb-8"></div>
+
+<div class="bg-slate-900/40 p-6 rounded-xl border border-emerald-500/20">
+
+<h3 style="font-size:22px;font-weight:900;color:#000000;margin-bottom:18px;text-transform:uppercase;">
+Descrição das Ações Cumpridas (100%)
+</h3>
+
+<div id="concluidos-list" class="space-y-2 text-[10px] text-slate-400"></div>
+
+</div>
+
+</div>
+
+<!-- 010 PERFIS -->
+<div id="view-perfis" class="tab-view hidden">
+<div id="listaPerfis"></div>
+</div>
+
+<!-- 011 TCERO -->
+<div id="view-tcero" class="tab-view hidden">
+<div id="listaTCERO"></div>
+</div>
+
+<!-- 012 USUARIOS -->
+<div id="view-usuarios" class="tab-view hidden">
+<div id="listaUsuarios"></div>
+</div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/sedam-core.js"></script>
+<script src="js/sedam-monitoramento.js"></script>
+<script src="js/sedam-graficos.js"></script>
+<script src="js/sedam-pdf.js"></script>
+<script src="js/tcero.js"></script>
+
+</body>
+</html>

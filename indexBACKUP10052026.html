@@ -1,0 +1,3024 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>Monitoramento TAG Sedam 2026</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+<img src="bandeira-ro.png" id="bandeiraFlutuante">
+
+<style>
+body{background:#f5f0e6;color:#000000;font-family:'Inter',sans-serif;margin:0;overflow-x:hidden;}
+body:not(.login-bg){background:#f5f0e6!important;}
+body.login-bg{background:url('portovelho.png') center center/cover no-repeat fixed!important;filter:contrast(1.15) saturate(1.18) brightness(1.02);}
+body.login-bg::before{content:"";position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(to bottom,rgba(255,255,255,.08),rgba(255,255,255,.14));z-index:0;}
+#bandeiraFlutuante{position:fixed;top:145px;left:50%;transform:translateX(-50%);width:320px;z-index:0;pointer-events:none;display:block!important;opacity:.28;filter:drop-shadow(0 10px 18px rgba(0,0,0,.16)) drop-shadow(0 2px 4px rgba(255,255,255,.08));transform-origin:left center;animation:bandeiraRealista 8s ease-in-out infinite;will-change:transform;}
+body.login-bg #bandeiraFlutuante{display:block!important;}
+#login-screen.hidden,#login-screen[style*="display: none"]{display:none!important;height:0!important;min-height:0!important;padding:0!important;margin:0!important;overflow:hidden!important}#dashboard{margin-top:0!important;padding-top:10px!important;position:relative!important;z-index:2!important;width:100%!important}.tab-content{display:none!important;width:100%!important}.tab-content.active{display:block!important;width:100%!important;animation:fadePainel .25s ease}.graficos-grid,.chart-container,.grafico-card,.box-chart{display:grid!important;visibility:visible!important;opacity:1!important;width:100%!important;height:auto!important;min-height:420px!important}.grafico-card canvas,.box-chart canvas,.chart-container canvas,#graficoResumo,#graficoMonitoramento,#graficoGeral,#graficoLinha,#graficoPizza,#graficoBarras{display:block!important;visibility:visible!important;opacity:1!important;width:100%!important;height:380px!important;max-height:380px!important}.tab-btn{align-self:start!important}@keyframes fadePainel{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){body{overflow-x:hidden!important;}nav{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:0 4px!important}.tab-btn{min-height:68px!important;padding:.55rem!important;border-radius:18px!important;font-size:.62rem!important}.tab-btn div:first-child{font-size:20px!important;margin-bottom:1px!important}.tab-btn div:last-child{font-size:9px!important;line-height:1!important}.bg-slate-900\/70{width:100%!important;max-width:94%!important;padding:18px!important;border-radius:22px!important}.card-micro{min-height:34px!important;font-size:10px!important}.percent-big{font-size:.92rem!important}.btn-pdf{padding:6px 10px!important;font-size:8px!important;border-radius:10px!important}.legend-box{font-size:.58rem!important;padding:.7rem!important}.td-mes{font-size:9px!important}.td-mes-strong{font-size:11px!important}.td-total{font-size:12px!important}.td-desc{font-size:9px!important;max-width:130px!important}.td-data{font-size:8px!important;padding:2px!important}.input-mes{width:44px!important;font-size:11px!important}.input-table{width:30px!important;font-size:9px!important}table{font-size:9px!important}th,td{padding:3px!important;word-break:break-word!important}#dashboard{padding:6px!important}.grid{gap:6px!important}canvas{max-width:100%!important;height:auto!important}}
+@keyframes bandeiraRealista{0%{transform:translateX(-50%) perspective(1800px) rotateY(0deg) skewY(0deg) translateY(0px);}10%{transform:translateX(-50%) perspective(1800px) rotateY(-2deg) skewY(-.2deg) translateY(-1px);}20%{transform:translateX(-50%) perspective(1800px) rotateY(1.5deg) skewY(.2deg) translateY(.5px);}30%{transform:translateX(-50%) perspective(1800px) rotateY(-3deg) skewY(-.3deg) translateY(-1px);}40%{transform:translateX(-50%) perspective(1800px) rotateY(2deg) skewY(.2deg) translateY(1px);}50%{transform:translateX(-50%) perspective(1800px) rotateY(-2.5deg) skewY(-.3deg) translateY(-1px);}60%{transform:translateX(-50%) perspective(1800px) rotateY(1.5deg) skewY(.2deg) translateY(.5px);}70%{transform:translateX(-50%) perspective(1800px) rotateY(-2deg) skewY(-.2deg) translateY(-1px);}80%{transform:translateX(-50%) perspective(1800px) rotateY(1deg) skewY(.1deg) translateY(.5px);}90%{transform:translateX(-50%) perspective(1800px) rotateY(-1.5deg) skewY(-.1deg) translateY(-.5px);}100%{transform:translateX(-50%) perspective(1800px) rotateY(0deg) skewY(0deg) translateY(0px);}}
+.card-micro{padding:.15rem;min-height:40px;display:flex;align-items:center;justify-content:center;transition:.2s;border-radius:4px;border:1px solid rgba(120,102,84,.12);cursor:pointer;background:rgba(255,255,255,.45);backdrop-filter:blur(6px);}
+.bg-status-red{background-color:#d6b7a7!important;}
+.bg-status-yellow{background-color:#dcc9a3!important;}
+.bg-status-green{background-color:#b9c9b1!important;}
+.percent-big{font-size:1.1rem;font-weight:900;color:#4a4038;}
+.tab-btn{padding:1.2rem!important;font-size:.9rem!important;font-weight:900!important;text-transform:uppercase!important;color:#6e563d!important;border:none!important;border-radius:28px!important;background:rgba(255,255,255,.88)!important;box-shadow:0 10px 28px rgba(0,0,0,.08)!important;backdrop-filter:blur(10px)!important;transition:all .25s ease!important;display:flex!important;align-items:center!important;justify-content:center!important;min-height:110px!important;}
+.tab-active{color:#8a6230!important;background:linear-gradient(135deg,#f8f1e7,#ead6b8)!important;box-shadow:0 14px 34px rgba(176,128,64,.22)!important;transform:translateY(-2px) scale(1.01)!important;border:1px solid #c89f68!important;}
+.input-table{background:transparent;border:none;color:#8b6b45;font-weight:800;width:45px;text-align:center;font-size:11px;}
+.row-100{background:rgba(150,180,140,.15)!important;color:#4b6b4b;font-weight:700;}
+.legend-box{background:rgba(255,255,255,.55);border:1px solid rgba(120,102,84,.12);padding:1rem;border-radius:10px;margin-top:1rem;font-size:.7rem;color:#5f564d;white-space:pre-wrap;}
+.btn-pdf{background:linear-gradient(135deg,#b08968,#d2b48c);color:#000;padding:8px 14px;border-radius:14px;font-size:10px;font-weight:900;text-transform:uppercase;transition:.25s;border:2px solid rgba(0,0,0,.08);box-shadow:0 4px 12px rgba(0,0,0,.12);}
+.btn-pdf:hover{transform:translateY(-1px) scale(1.02);filter:brightness(1.03);}
+.td-mes{font-size:12px;font-weight:700;text-align:center;}
+.td-mes-strong{font-size:16px;font-weight:900;text-align:center;}
+.td-total{font-size:18px;font-weight:900;text-align:right;}
+.td-desc{font-size:11px;max-width:280px;white-space:normal;line-height:1.2;}
+.td-data{font-size:11px;font-weight:700;text-align:center;vertical-align:middle;white-space:nowrap;line-height:1;padding:4px;}
+.tr-hover:hover{background:rgba(160,140,120,.08);}
+.input-mes{width:60px;font-size:16px;font-weight:900;text-align:center;background:#f3ece2;border:1px solid rgba(120,102,84,.15);border-radius:6px;color:#5c4d3d;}
+select{position:relative;z-index:10;pointer-events:auto;cursor:pointer;background:#f3ece2;color:#4f463e;border:1px solid rgba(120,102,84,.12);}
+tr{position:relative;z-index:1;}
+#tab-perfis{background:#e7dccd;color:#7b5c3d;font-weight:600;}
+.bg-slate-900\/70{background:rgba(255,255,255,.82)!important;border:1px solid rgba(0,0,0,.08)!important;backdrop-filter:blur(10px);box-shadow:0 10px 40px rgba(0,0,0,.18);}
+.bg-slate-900\/40{background:#dbeafe!important;border:2px solid #1e3a8a!important;}
+.bg-slate-800{background:#efe5d8!important;color:#4b4038!important;}
+.text-white,.text-slate-300,.text-blue-400,.text-yellow-400,.text-emerald-400{color:#000000!important;}
+.text-slate-500{color:#111111!important;}
+.border-white\/10{border-color:rgba(120,102,84,.08)!important;}
+.border-white\/5{border-color:rgba(120,102,84,.05)!important;}
+button{transition:.2s;}
+button:hover{filter:brightness(1.03);}
+#descSubitem{background:#dbeafe!important;border:2px solid #1e3a8a!important;color:#000000!important;font-size:18px!important;font-weight:800!important;padding:18px!important;border-radius:14px!important;line-height:1.8!important;}
+table,td,#concluidos-list,#listaPerfis,#listaUsuarios,#listaTCERO{color:#000000!important;}
+th{color:#0f172a!important;font-weight:900!important;}
+td{font-weight:700!important;}
+input,select,textarea{color:#000000!important;font-weight:800!important;background:#ffffff!important;}
+option{color:#000000!important;background:#ffffff!important;}
+nav{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;overflow-x:auto!important;padding:4px 0!important}.tab-btn{flex:1 1 0!important;max-width:180px!important;min-width:120px!important;height:76px!important;min-height:76px!important;padding:8px 10px!important;border-radius:24px!important;background:rgba(255,255,255,.82)!important;border:1px solid rgba(255,255,255,.55)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;box-shadow:0 8px 24px rgba(15,23,42,.08),inset 0 1px 0 rgba(255,255,255,.78)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:3px!important;position:relative!important;overflow:hidden!important;transition:all .22s ease!important}.tab-btn:hover{transform:translateY(-2px)!important;box-shadow:0 14px 28px rgba(15,23,42,.12)!important}.tab-btn::before{content:"";position:absolute;top:0;left:0;width:100%;height:48%;background:linear-gradient(to bottom,rgba(255,255,255,.42),transparent);pointer-events:none}.tab-active{background:linear-gradient(180deg,rgba(255,248,238,.98),rgba(239,223,198,.94))!important;border:1px solid rgba(205,164,104,.42)!important;box-shadow:0 16px 34px rgba(176,128,64,.16)!important}.tab-btn div:first-child{font-size:24px!important;line-height:1!important;margin:0!important}.tab-btn div:last-child{font-size:11px!important;font-weight:900!important;letter-spacing:.2px!important;line-height:1.05!important;color:#6b5338!important;text-align:center!important}@media(max-width:900px){nav{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.tab-btn{max-width:100%!important;min-width:unset!important;height:64px!important;min-height:64px!important;border-radius:18px!important}.tab-btn div:first-child{font-size:18px!important}.tab-btn div:last-child{font-size:8px!important}}
+.tab-btn{min-height:78px!important;padding:.7rem!important;font-size:.72rem!important;border-radius:22px!important;gap:4px!important;}
+.tab-btn div:first-child{font-size:26px!important;margin-bottom:2px!important;}
+.tab-btn div:last-child{font-size:11px!important;line-height:1.1!important;}
+#analise,#graficos,#graficoResumo,#graficoGeral,#graficoMonitoramento,canvas{display:block!important;visibility:visible!important;opacity:1!important}canvas{width:100%!important;max-width:100%!important;height:auto!important;min-height:320px!important}.chart-container,.grafico-box,.box-chart{display:block!important;min-height:340px!important;position:relative!important;z-index:3!important}
+#graficoResumo,#graficoMonitoramento,#graficoGeral,#graficoLinha,#graficoBarras,#graficoPizza,canvas{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:10!important}.chart-container,.grafico-container,.box-grafico,.chart-box{background:rgba(255,255,255,.52)!important;border:1px solid rgba(80,110,180,.22)!important;border-radius:26px!important;padding:18px!important;min-height:420px!important;height:auto!important;display:flex!important;align-items:center!important;justify-content:center!important;backdrop-filter:blur(10px)!important}canvas{width:100%!important;height:420px!important;max-height:420px!important;background:transparent!important}
+  
+</style>
+
+</head>
+<body class="p-2 md:p-4">
+<div id="login-screen" class="min-h-screen flex items-center justify-center">
+<div class="bg-slate-900/70 backdrop-blur-md p-8 rounded-3xl border border-white/10 shadow-2xl w-full max-w-xs text-center">
+<h1 class="text-xl font-black text-blue-400 mb-6 uppercase">TAG Sedam-RO</h1>
+<input type="text" id="u" placeholder="Usuário" class="w-full p-3 mb-3 bg-slate-800 rounded-lg text-white text-sm">
+<input type="password" id="p" placeholder="Senha" class="w-full p-3 mb-4 bg-slate-800 rounded-lg text-white text-sm">
+<button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-xl font-bold text-sm">ACESSAR PAINEL</button>
+</div>
+</div>
+
+<div id="dashboard" class="hidden">
+
+<header class="flex justify-between items-center mb-4 px-2">
+
+<div>
+<h2 class="text-lg font-black text-blue-400 leading-none tracking-tighter uppercase">
+Painel de Auditoria TAG 2026
+</h2>
+
+<p id="user-info" class="text-[9px] text-slate-500 mt-1 uppercase italic"></p>
+</div>
+
+<div class="flex items-center gap-4">
+
+<div id="pdf-container" class="flex items-center gap-2"></div>
+
+<div id="backup-container" class="flex items-center gap-2 min-w-[140px]"></div>
+
+<div class="text-right border-l border-white/10 pl-4">
+<span class="block text-[7px] text-slate-500 font-bold uppercase">
+Média Geral TAG
+</span>
+<span id="total-geral" class="text-2xl font-black text-emerald-400">
+0%
+</span>
+</div>
+
+<button onclick="logout()" class="text-[11px] bg-red-700 hover:bg-red-800 text-white font-black px-4 py-2 rounded-xl shadow-lg">
+SAIR
+</button>
+
+</div>
+
+</header>
+
+<nav class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-2 mb-4">
+
+<button onclick="switchTab('resumo')" id="tab-resumo" class="tab-btn tab-active flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-gradient-to-br from-[#f6efe6] to-[#efe3d2] border border-[#d8b78a] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">📊</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#7a5b35] text-center leading-tight">Resumo</div>
+</button>
+
+<button onclick="switchTab('mensal')" id="tab-mensal" class="tab-btn flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-white/90 border border-[#e5d6c3] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">📑</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#6e5a45] text-center leading-tight">Monitoramento</div>
+</button>
+
+<button onclick="switchTab('analise')" id="tab-analise" class="tab-btn flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-white/90 border border-[#e5d6c3] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">📈</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#6e5a45] text-center leading-tight">Gráficos</div>
+</button>
+
+<button onclick="switchTab('concluidos')" id="tab-concluidos" class="tab-btn flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-white/90 border border-[#e5d6c3] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">🏆</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#6e5a45] text-center leading-tight">100% Cumpridos</div>
+</button>
+
+<button id="tab-perfis" onclick="switchTab('perfis')" class="tab-btn hidden flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-gradient-to-br from-[#f6efe6] to-[#efe3d2] border border-[#d8b78a] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">👥</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#7a5b35] text-center leading-tight">Perfis Sedam</div>
+</button>
+
+<button id="tab-tcero" onclick="switchTab('tcero')" class="tab-btn hidden flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-white/90 border border-[#e5d6c3] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">🛡️</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#6e5a45] text-center leading-tight">Perfis TCE-RO</div>
+</button>
+
+<button id="tab-usuarios" onclick="switchTab('usuarios')" class="tab-btn flex flex-col items-center justify-center rounded-2xl p-3 min-h-[82px] bg-white/90 border border-[#e5d6c3] shadow-[0_4px_14px_rgba(0,0,0,0.08)] hover:scale-[1.01] transition-all duration-300">
+<div class="text-2xl mb-1">👤</div>
+<div class="text-[11px] font-black tracking-wide uppercase text-[#6e5a45] text-center leading-tight">Usuários Sedam</div>
+</button>
+
+</nav>
+
+<div class="flex gap-2 mb-3 items-center justify-between">
+
+<div class="flex gap-2">
+<button onclick="modoResumo='subitem';renderResumo()" class="text-xs bg-blue-600 px-2 py-1 rounded">
+SUBITEM
+</button>
+</div>
+
+<div class="flex gap-2 items-center">
+
+<input id="dataInicio" type="date" onchange="aplicarFiltroData()" class="text-xs bg-slate-800 px-2 py-1 rounded">
+
+<input id="dataFim" type="date" onchange="aplicarFiltroData()" class="text-xs bg-slate-800 px-2 py-1 rounded">
+
+<button onclick="limparFiltroData()" class="text-xs bg-slate-600 px-2 py-1 rounded">
+LIMPAR
+</button>
+
+<button onclick="toggleOcultarConcluidos()" id="btn-ocultar" class="text-xs bg-slate-700 px-2 py-1 rounded">
+OCULTAR 100%
+</button>
+
+</div>
+
+</div>
+
+<!-- RESUMO -->
+
+<div id="view-resumo" class="tab-view">
+<div id="cards-container" class="grid grid-cols-6 sm:grid-cols-12 md:grid-cols-16 lg:grid-cols-20 2xl:grid-cols-28 gap-1"></div>
+</div>
+
+<button id="btn-voltar" onclick="fecharDrill()" style="display:none" class="mb-2 text-xs bg-red-600 px-2 py-1 rounded">
+← VOLTAR
+</button>
+
+<!-- MONITORAMENTO -->
+
+<div id="view-mensal" class="tab-view hidden">
+
+<div class="bg-slate-900/40 rounded-xl border border-white/5 overflow-x-auto">
+
+<table class="w-full text-left border-collapse min-w-[1400px]">
+
+<thead>
+
+<tr class="text-[8px] text-slate-500 uppercase border-b border-white/10">
+
+<th>Sub-Item</th>
+
+<th>Descrição</th>
+
+<th>Produtos</th>
+
+<th>Responsável(is)</th>
+
+<th>Setor</th>
+
+<th>Data Início</th>
+
+<th class="opacity-40">JAN</th>
+
+<th class="opacity-40">FEV</th>
+
+<th class="opacity-40">MAR</th>
+
+<th class="text-blue-400">ABR</th>
+
+<th class="text-yellow-400">MAI</th>
+
+<th>Total</th>
+
+</tr>
+
+</thead>
+
+<tbody id="table-body" class="text-[10px]"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<!-- GRÁFICOS -->
+
+<div id="view-analise" class="tab-view hidden">
+
+<select id="tipoGrafico" class="hidden">
+<option value="subitem" selected>POR SUBITEM</option>
+</select>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+
+<select id="filtroItem" class="bg-slate-800 p-2 rounded text-sm"></select>
+
+<select id="filtroSubitem" class="bg-slate-800 p-2 rounded text-sm"></select>
+
+</div>
+
+<div class="bg-slate-900/40 p-4 rounded-xl mb-4">
+
+<canvas id="chartMaster"></canvas>
+
+<div id="descSubitem" style="font-size:18px;font-weight:800;line-height:1.7;color:#000000;background:#dbeafe;padding:18px;border-radius:14px;border:2px solid #1e3a8a;margin-top:14px;"></div>
+
+</div>
+
+<div id="ranking" class="mt-6 text-xs"></div>
+
+</div>
+
+<!-- 100% -->
+
+<div id="view-concluidos" class="tab-view hidden">
+
+<div id="concluidos-container" class="grid grid-cols-6 sm:grid-cols-12 lg:grid-cols-18 gap-1 mb-8"></div>
+
+<div class="bg-slate-900/40 p-6 rounded-xl border border-emerald-500/20">
+
+<h3 style="font-size:22px;font-weight:900;color:#000000;margin-bottom:18px;text-transform:uppercase;">
+Descrição das Ações Cumpridas (100%)
+</h3>
+
+<div id="concluidos-list" class="space-y-2 text-[10px] text-slate-400"></div>
+
+</div>
+
+</div>
+
+<!-- PERFIS SEDAM -->
+
+<div id="view-perfis" class="tab-view hidden">
+
+<div class="flex flex-wrap gap-2 mb-3">
+
+<input id="p_nome" placeholder="Nome completo" class="bg-slate-800 p-2 rounded text-xs w-[240px]">
+
+<input id="p_user" placeholder="Username" class="bg-slate-800 p-2 rounded text-xs w-[140px]">
+
+<input id="p_cargo" placeholder="Cargo" class="bg-slate-800 p-2 rounded text-xs w-[180px]">
+
+<input id="p_setor" placeholder="Setor" class="bg-slate-800 p-2 rounded text-xs w-[160px]">
+
+<select id="p_nivel" class="bg-slate-800 p-2 rounded text-xs w-[120px]">
+<option value="1">Nível 1</option>
+<option value="2">Nível 2</option>
+<option value="3">Nível 3</option>
+</select>
+
+<button onclick="salvarPerfil()" class="bg-emerald-600 px-3 py-2 rounded text-xs font-black">
+SALVAR
+</button>
+
+</div>
+
+<div id="listaPerfis" class="text-xs"></div>
+
+</div>
+
+<!-- PERFIS TCE -->
+
+<div id="view-tcero" class="tab-view hidden">
+
+<div class="text-xs text-slate-300 mb-2 font-bold uppercase">
+SERVIDORES TCE-RO
+</div>
+
+<div class="flex flex-wrap gap-2 mb-4" id="boxCadastroTCERO">
+
+<input id="tc_nome" placeholder="Nome completo" class="bg-slate-800 p-2 rounded text-xs w-[240px]">
+
+<input id="tc_user" placeholder="Usuário" class="bg-slate-800 p-2 rounded text-xs w-[120px]">
+
+<input id="tc_senha" placeholder="Senha" class="bg-slate-800 p-2 rounded text-xs w-[90px]">
+
+<input id="tc_cargo" placeholder="Cargo" class="bg-slate-800 p-2 rounded text-xs w-[220px]">
+
+<select id="tc_pdf" class="bg-slate-800 p-2 rounded text-xs w-[120px]">
+<option value="false">SEM PDF</option>
+<option value="true">COM PDF</option>
+</select>
+
+<select id="tc_nivel" class="bg-slate-800 p-2 rounded text-xs w-[120px]">
+<option value="4">Visualização</option>
+<option value="1">Administrador</option>
+</select>
+
+<button onclick="novoTCERO()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black px-4 py-2 rounded-xl">
+NOVO
+</button>
+
+<button id="btnSalvarTCERO" onclick="salvarPerfilTCERO()" class="bg-blue-700 px-3 py-2 rounded text-xs font-black">
+SALVAR
+</button>
+
+</div>
+
+<div class="overflow-x-auto">
+
+<div class="grid grid-cols-6 gap-2 text-[10px] font-black uppercase border-b border-white/20 pb-2 mb-2">
+
+<div>Nome</div>
+
+<div>Usuário</div>
+
+<div>Cargo</div>
+
+<div>Nível</div>
+
+<div>PDF</div>
+
+<div>Ações</div>
+
+</div>
+
+<div id="listaTCERO" class="text-xs"></div>
+
+</div>
+
+</div>
+
+<!-- USUÁRIOS -->
+
+<div id="view-usuarios" class="tab-view hidden">
+
+<div class="text-xs text-slate-300 mb-2 font-bold">
+USUÁRIOS CADASTRADOS
+</div>
+
+<div id="listaUsuarios" class="text-xs"></div>
+
+</div>
+
+</div>
+
+<script>
+const USUARIOS_OCULTOS=['neto','gleidi','vagner']
+
+async function carregarUsuarios(){
+
+if(!userP)return
+
+let {data,error}=await client
+.from('perfis')
+.select('id,nome_completo,username,nivel_acesso')
+.order('nome_completo')
+
+if(error){
+console.error(error)
+return
+}
+
+let lista=data||[]
+
+let adminMaster=
+Number(userP.nivel_acesso)===1||
+['manoel','vagner','gleidi'].includes(
+(userP.username||'').toLowerCase()
+)
+
+if(!adminMaster){
+lista=lista.filter(u=>
+String(u.id)===String(userP.id)
+)
+}
+
+let html=`
+<div class="w-full">
+<div class="grid grid-cols-2 text-xs font-black text-black border-b border-slate-700 pb-2 mb-2">
+<div>Nome completo</div>
+<div class="text-right">Login</div>
+</div>
+
+${lista.map(u=>`
+<div class="grid grid-cols-2 items-center border-b border-slate-300 py-2">
+<div class="text-black font-semibold">${u.nome_completo||'-'}</div>
+<div class="text-right font-black text-blue-900">${u.username||'-'}</div>
+</div>
+`).join('')}
+
+</div>
+`
+
+document.getElementById('listaUsuarios').innerHTML=html
+
+}
+
+async function carregarPerfis(){
+
+if(!userP)return
+
+let isAdminSedam=
+Number(userP.nivel_acesso)===1
+
+let isTCERO=
+(userP.origem||'')==='TCERO'
+
+let isUsuarioSedam=
+(userP.origem||'')==='SEDAM'
+
+if(
+isTCERO &&
+!['manoel','vagner','gleidi'].includes(
+(userP.username||'').toLowerCase()
+)
+){
+return
+}
+
+let query=client
+.from('perfis')
+.select('*')
+.order('nome_completo')
+
+if(!isAdminSedam){
+
+query=query.eq('id',userP.id)
+
+}
+
+let {data,error}=await query
+
+if(error){
+console.error(error)
+return
+}
+
+window.perfis=data||[]
+
+let html=`
+<table class="w-full text-xs">
+<thead>
+<tr class="text-slate-400 border-b border-white/20">
+<th class="text-left p-2">Nome</th>
+<th class="text-left p-2">Username</th>
+<th class="text-left p-2">Cargo</th>
+<th class="text-left p-2">Setor</th>
+<th class="text-left p-2">Nível</th>
+<th class="text-right p-2">Ações</th>
+</tr>
+</thead>
+<tbody>
+${window.perfis.map(p=>{
+
+let isOculto=USUARIOS_OCULTOS.includes(
+(p.username||'').toLowerCase()
+)
+
+let podeEditar=
+isAdminSedam
+
+return `
+<tr class="border-b border-white/10 hover:bg-white/5">
+<td class="p-2">${p.nome_completo||'-'}</td>
+<td class="p-2">${p.username||'-'}</td>
+<td class="p-2">${p.cargo||'-'}</td>
+<td class="p-2">${p.setor||'-'}</td>
+<td class="p-2">N${p.nivel_acesso||'-'}</td>
+<td class="p-2 text-right">
+${podeEditar?`
+<button ${isOculto?'disabled style="opacity:0.3;pointer-events:none"':''} onclick="editarPerfil('${p.id}')" class="bg-blue-600 px-2 py-1 rounded mr-1">
+Editar
+</button>
+<button ${isOculto?'disabled style="opacity:0.3;pointer-events:none"':''} onclick="excluirPerfil('${p.id}')" class="bg-red-600 px-2 py-1 rounded">
+Excluir
+</button>
+`:`<span class="text-slate-500 font-black">VISUALIZAÇÃO</span>`}
+</td>
+</tr>
+`
+
+}).join('')}
+</tbody>
+</table>
+`
+
+document.getElementById('listaPerfis').innerHTML=html
+
+}
+
+let editPerfilId=null
+async function salvarPerfil(){
+
+if(!userP)return
+
+if(Number(userP.nivel_acesso)!==1){
+alert("Sem permissão")
+return
+}
+
+let nome=document.getElementById('p_nome').value.trim()
+let user=document.getElementById('p_user').value.trim().toLowerCase()
+let cargo=document.getElementById('p_cargo').value.trim()
+let setor=document.getElementById('p_setor').value.trim()
+let nivel=Number(document.getElementById('p_nivel').value||3)
+
+if(!nome||!user){
+alert("Preencha nome e username")
+return
+}
+
+let payload={
+nome_completo:nome,
+username:user,
+cargo:cargo,
+setor:setor,
+nivel_acesso:nivel
+}
+
+let res=null
+
+if(editPerfilId){
+
+res=await client
+.from('perfis')
+.update(payload)
+.eq('id',editPerfilId)
+
+}else{
+
+res=await client
+.from('perfis')
+.insert(payload)
+
+}
+
+if(res.error){
+console.error(res.error)
+alert("Erro ao salvar")
+return
+}
+
+editPerfilId=null
+
+document.getElementById('p_nome').value=''
+document.getElementById('p_user').value=''
+document.getElementById('p_cargo').value=''
+document.getElementById('p_setor').value=''
+document.getElementById('p_nivel').value='3'
+
+await carregarPerfis()
+
+await atualizarResponsaveis?.()
+
+alert("Perfil Sedam salvo com sucesso")
+
+}
+
+function editarPerfil(id){
+let p=window.perfis.find(x=>String(x.id)===String(id))
+if(!p)return
+editPerfilId=p.id
+document.getElementById('p_nome').value=p.nome_completo||''
+document.getElementById('p_user').value=p.username||''
+document.getElementById('p_cargo').value=p.cargo||''
+document.getElementById('p_setor').value=p.setor||''
+document.getElementById('p_nivel').value=p.nivel_acesso||3
+window.scrollTo({top:0,behavior:'smooth'})
+}
+
+async function excluirPerfil(id){
+if(userP && Number(userP.nivel_acesso)!=1)return
+let p=window.perfis.find(x=>x.id==id)
+if(!p)return
+if(!confirm(`Excluir ${p.nome_completo}?`))return
+let {error}=await client.from('perfis').delete().eq('id',id)
+if(error){console.error(error);alert("Erro ao excluir");return}
+await carregarPerfis()
+await atualizarResponsaveis()
+}
+
+function limparFormPerfil(){
+document.getElementById('p_nome').value=''
+document.getElementById('p_user').value=''
+document.getElementById('p_cargo').value=''
+document.getElementById('p_setor').value=''
+document.getElementById('p_nivel').value='3'
+}
+
+async function atualizarResponsaveis(){
+let {data}=await client.from('perfis').select('*')
+window.perfis=data||[]
+}
+
+function parseSubitemParts(s){
+let [i,rest]=String(s||'0.0').split('.')
+let n1=parseInt(i)||0
+let n2=parseInt((rest||'0').replace(/[^\d].*$/,''))||0
+let suf=(rest||'').replace(/^\d+/,'')||''
+return{n1,n2,suf}
+}
+function compareSubitem(a,b){
+let pa=parseSubitemParts(a.subitem)
+let pb=parseSubitemParts(b.subitem)
+if(pa.n1!==pb.n1)return pa.n1-pb.n1
+if(pa.n2!==pb.n2)return pa.n2-pb.n2
+return pa.suf.localeCompare(pb.suf)
+}
+function getItemKey(i){
+return(i.item&&i.item!==''?i.item:(String(i.subitem||'0.0').split('.')[0]))
+}
+function getTotal(i){
+return Math.max(
+Number(i.jan||0),
+Number(i.fev||0),
+Number(i.mar||0),
+Number(i.abr||0),
+Number(i.mai||0),
+Number(i.jun||0),
+Number(i.jul||0),
+Number(i.ago||0),
+Number(i.set||0),
+Number(i.out||0),
+Number(i.nov||0),
+Number(i.dez||0)
+)
+}
+function formatarDataBR(dataStr){
+if(!dataStr)return'-'
+let p=dataStr.split('-')
+if(p.length!==3)return dataStr
+return p[2]+'/'+p[1]+'/'+p[0]
+}
+let ocultarConcluidos=false
+function parseDataLocal(dataStr){
+if(!dataStr)return null
+let p=dataStr.split('-')
+if(p.length!==3)return null
+return new Date(Number(p[0]),Number(p[1])-1,Number(p[2]),12,0,0)
+}
+let filtroDataInicio=null
+let filtroDataFim=null
+let filtroItemAtivo=null
+const descItens={"1":"Planejamento Estratégico e Governança","2":"Análise e Revisão do Planejamento Estratégico","3":"Atualização e Consolidação do Plano Estratégico","4":"Governança e Monitoramento Estratégico","5":"Mapeamento e Melhoria de Processos","6":"Desenvolvimento e Estruturação de Sistemas","7":"Adequação Normativa e Legal","8":"Capacitação Técnica e Sensoriamento","9":"Desenvolvimento de Sistemas e Integração","10":"Integração e Expansão Tecnológica","12":"Transparência e Portal Público","15":"Revisão de Plano de Ação","24":"Cadastro de Unidades de Conservação","25":"Programas Ambientais e REDD+","30":"Articulação Institucional","31":"Organização e Gestão Operacional","33":"Monitoramento e Coleta de Dados","45":"Ações Integradas e Cooperação"}
+let modoResumo='subitem'
+let modoGrupo='subitem'
+document.addEventListener("DOMContentLoaded",()=>{
+document.getElementById('dataInicio').value='2025-01-01'
+document.getElementById('dataFim').value='2028-01-01'
+document.body.classList.add("login-bg")
+filtroDataInicio='2025-01-01'
+filtroDataFim='2028-01-01'
+localStorage.removeItem('uid')
+let userLocal=localStorage.getItem('user')
+if(userLocal){
+try{
+let perfil=JSON.parse(userLocal)
+if(perfil&&perfil.username){
+window.userP=perfil
+userP=perfil
+document.body.classList.remove('login-bg')
+document.getElementById('login-screen').classList.add('hidden')
+document.getElementById('dashboard').classList.remove('hidden')
+document.getElementById('user-info').innerHTML=
+(perfil.nome_completo||'-')+
+' • '+
+(perfil.cargo||'-')+
+' • '+
+(perfil.origem||'-')
+switchTab(localStorage.getItem('activeTab')||'resumo')
+carregarDados()
+return
+}
+}catch(e){
+console.log(e)
+localStorage.removeItem('user')
+}
+}
+const lastTab=localStorage.getItem('activeTab')
+if(lastTab){
+switchTab(lastTab)
+}
+})
+const client=supabase.createClient(
+window.S_URL,
+window.S_KEY
+)
+let userP=null
+let allData=[]
+let myChart=null
+  
+async function login(){
+let usuario=document.getElementById('u').value.trim().toLowerCase()
+let senha=document.getElementById('p').value.trim()
+if(!usuario||!senha){
+alert('Informe usuário e senha')
+return
+}
+let perfil=null
+let {data:p1}=await client
+.from('perfistce')
+.select('*')
+.eq('username',usuario)
+.eq('senha',senha)
+.limit(1)
+if(p1&&p1.length){
+perfil=p1[0]
+perfil.origem='TCERO'
+}else{
+let {data:p2}=await client
+.from('perfis')
+.select('*')
+.eq('username',usuario)
+.limit(1)
+if(p2&&p2.length){
+perfil=p2[0]
+perfil.origem='SEDAM'
+if(
+perfil.senha &&
+String(perfil.senha)!==String(senha)
+){
+alert('Senha inválida')
+return
+}
+}
+}
+if(!perfil){
+alert('Usuário não encontrado')
+return
+}
+window.userP=perfil
+userP=perfil
+localStorage.setItem('user',JSON.stringify(perfil))
+document.body.classList.remove('login-bg')
+document.getElementById('login-screen').classList.add('hidden')
+document.getElementById('dashboard').classList.remove('hidden')
+document.getElementById('user-info').innerHTML=
+(perfil.nome_completo||'-')+
+' • '+
+(perfil.cargo||'-')+
+' • '+
+(perfil.origem||'-')
+let tabPerfis=document.getElementById('tab-perfis')
+let tabTCERO=document.getElementById('tab-tcero')
+
+if(tabPerfis){
+tabPerfis.classList.add('hidden')
+}
+
+if(tabTCERO){
+tabTCERO.classList.add('hidden')
+}
+
+let usernameAtual=(perfil.username||'').toLowerCase()
+
+let adminsTCERO=[
+'manoel',
+'vagner',
+'gleidi'
+]
+
+if(
+perfil.origem==='SEDAM'
+){
+
+if(tabPerfis){
+tabPerfis.classList.remove('hidden')
+tabPerfis.innerText='PERFIS SEDAM'
+}
+
+if(tabTCERO){
+tabTCERO.style.display='none'
+}
+
+}
+
+if(
+perfil.origem==='TCERO' &&
+adminsTCERO.includes(usernameAtual)
+){
+
+if(tabPerfis){
+tabPerfis.classList.remove('hidden')
+tabPerfis.innerText='PERFIS SEDAM'
+}
+
+if(tabTCERO){
+tabTCERO.classList.remove('hidden')
+tabTCERO.style.display='inline-block'
+}
+
+}
+
+if(
+perfil.origem==='TCERO' &&
+!adminsTCERO.includes(usernameAtual)
+){
+
+if(tabPerfis){
+tabPerfis.style.display='none'
+}
+
+if(tabTCERO){
+tabTCERO.style.display='none'
+}
+
+}
+
+if(
+perfil.origem==='SEDAM' &&
+usernameAtual==='hueriqui'
+){
+
+if(tabTCERO){
+tabTCERO.style.display='none'
+}
+
+}
+let backupBox=document.getElementById('backup-container')
+if(backupBox){
+backupBox.innerHTML=''
+let adminsBackup=['manoel','vagner','gleidi']
+let usernameAtual=(perfil.username||'').toLowerCase()
+let podeBackup=
+Number(perfil.nivel_acesso)===1&&
+adminsBackup.includes(usernameAtual)
+if(podeBackup){
+let btnBackup=document.createElement('button')
+btnBackup.id='btnBackup'
+btnBackup.innerText='BACKUP'
+btnBackup.className='bg-purple-700 hover:bg-purple-800 text-white font-black px-4 py-2 rounded-xl shadow-lg'
+btnBackup.onclick=function(){
+if(typeof backupCompleto==='function'){
+backupCompleto()
+}else if(typeof gerarJSON==='function'){
+gerarJSON(allData||[])
+}else{
+alert('Função de backup não encontrada.')
+}
+}
+backupBox.appendChild(btnBackup)
+}
+}
+switchTab(localStorage.getItem('activeTab')||'resumo')
+if(typeof sincronizarResponsaveis==='function'){
+await sincronizarResponsaveis()
+}
+await carregarDados()
+}
+
+async function carregarDados(){
+if(!window.userP){
+console.log('userP não carregado')
+return
+}
+
+let query=client.from('deliberacoes').select('*')
+
+if(
+userP &&
+Number(userP.nivel_acesso)!==1 &&
+Number(userP.nivel_acesso)!==4 &&
+!['manoel','vagner','gleidi'].includes((userP.username||'').toLowerCase())
+){
+query=query.eq('responsavel_id',userP.id)
+}
+
+let {data,error}=await query
+
+if(error){
+console.log(error)
+allData=[]
+return
+}
+
+if(!data){
+allData=[]
+return
+}
+
+let listaPerfis=[
+...(window.perfis||[]),
+...(window.perfisTCERO||[])
+]
+
+allData=(data||[])
+.filter(d=>d&&d.subitem&&d.descricao)
+.map(i=>{
+
+let perfil=listaPerfis.find(p=>
+String(p.id)===String(i.responsavel_id)
+)
+
+if(perfil){
+i.responsavel=perfil.nome_completo
+}
+
+if(!i.responsavel||String(i.responsavel).trim()===''){
+i.responsavel='Não informado'
+}
+
+return i
+
+})
+.sort(compareSubitem)
+
+let media=allData.length
+?Math.round(
+allData.reduce((acc,c)=>{
+return acc+getTotal(c)
+},0)/(allData.length||1)
+)
+:0
+
+let box=document.getElementById('total-geral')
+
+if(box){
+box.innerText=media+'%'
+}
+
+renderResumo()
+renderTable()
+renderConcluidos()
+
+let ultimaTab=
+localStorage.getItem('activeTab')||
+'resumo'
+
+setTimeout(()=>{
+switchTab(ultimaTab)
+},100)
+
+if(typeof atualizarLista3==='function'){
+atualizarLista3()
+}
+
+}
+
+function renderResumo(){
+let mapa={}
+let base=[...allData]
+if(filtroDataInicio||filtroDataFim){
+base=base.filter(i=>{
+let d=parseDataLocal(i.data_inicio)||parseDataLocal(i.prazo_texto)
+if(!d)return false
+if(filtroDataInicio&&d<parseDataLocal(filtroDataInicio))return false
+if(filtroDataFim&&d>parseDataLocal(filtroDataFim))return false
+return true
+})
+}
+if(ocultarConcluidos){
+base=base.filter(i=>getTotal(i)<100)
+}
+base.forEach(i=>{
+let key=(modoResumo==='item')?getItemKey(i):(i.subitem||'')
+if(!key)return
+if(!mapa[key])mapa[key]=[]
+mapa[key].push(i)
+})
+let keys=Object.keys(mapa).filter(k=>k).sort((a,b)=>{
+let pa=parseSubitemParts(a.includes('.')?a:(a+'.0'))
+let pb=parseSubitemParts(b.includes('.')?b:(b+'.0'))
+if(pa.n1!==pb.n1)return pa.n1-pb.n1
+return pa.n2-pb.n2
+})
+let html=''
+keys.forEach(k=>{
+let lista=mapa[k]||[]
+if(!lista.length)return
+let media=Math.round(lista.reduce((acc,c)=>acc+getTotal(c),0)/(lista.length||1))
+let cor=media<=30?'bg-status-red':media>=100?'bg-status-green':'bg-status-yellow'
+let itemBase=lista[0]||{}
+
+let descricao=
+lista.find(x=>x.descricaoitem&&x.descricaoitem.trim())?.descricaoitem||
+lista.find(x=>x.descricao&&x.descricao.trim())?.descricao||
+''
+
+let responsavel=itemBase.responsavel||'Não informado'
+let itemClick=(modoResumo==='item'?k:k.split('.')[0])
+html+=`<div class="flex flex-col">
+<div class="card-micro ${cor}" onclick="abrirItem('${itemClick}')">
+<span class="percent-big">${media}%</span>
+<span style="font-size:10px;font-weight:900;color:#000000;">
+${k}
+</span>
+</div>
+<div style="font-size:7px;font-weight:700;color:#000000;margin-top:2px;padding:2px;text-align:center;line-height:1.1;">
+${descricao}
+</div>
+
+<div style="font-size:6px;font-weight:900;color:#0f172a;text-align:center;line-height:1.1;margin-top:1px;">
+${responsavel}
+</div>
+</div>`
+})
+let el=document.getElementById('cards-container')
+if(el)el.innerHTML=html
+}
+
+function abrirItem(item){
+filtroItemAtivo=item
+switchTab('mensal')
+renderTable()
+document.getElementById('btn-voltar').style.display='block'
+}
+
+function renderTable(){
+let lista=[...allData].sort(compareSubitem)
+lista=lista.filter(i=>{
+if(filtroItemAtivo){
+if(getItemKey(i)!==filtroItemAtivo)return false
+}
+let dataBase=parseDataLocal(i.data_inicio)||parseDataLocal(i.prazo_texto)
+if(filtroDataInicio||filtroDataFim){
+if(!dataBase)return false
+if(filtroDataInicio&&dataBase<parseDataLocal(filtroDataInicio))return false
+if(filtroDataFim&&dataBase>parseDataLocal(filtroDataFim))return false
+}
+if(ocultarConcluidos&&getTotal(i)>=100)return false
+return true
+})
+let totalRegistros=lista.length
+document.getElementById('table-body').innerHTML=lista.map(i=>{
+let dataFormatada=i.data_inicio?formatarDataBR(i.data_inicio):(i.prazo_texto||'-')
+let jan=Number(i.jan||0)
+let fev=Number(i.fev||0)
+let mar=Number(i.mar||0)
+let abr=Number(i.abr||0)
+let mai=Number(i.mai||0)
+let total=getTotal(i)
+let bg=total<=30?'bg-red-900/20':total>=100?'bg-emerald-900/20':'bg-yellow-900/20'
+let podeEditar=userP&&(Number(userP.nivel_acesso)===1||Number(userP.nivel_acesso)===2||String(i.responsavel_id)===String(userP.id))
+let responsavelTexto=i.responsavel||'-'
+let listaPerfis=[...(window.perfis||[]),...(window.perfisTCERO||[])]
+let perfilResponsavel=listaPerfis.find(p=>
+String(p.id)===String(i.responsavel_id)
+)
+
+if(perfilResponsavel){
+
+responsavelTexto=perfilResponsavel.nome_completo
+
+}else{
+
+responsavelTexto=
+i.responsavel||
+i.responsavel_manual||
+'Não informado'
+
+}
+return `<tr class="border-b border-white/5 tr-hover ${bg}">
+<td class="p-2 font-black text-blue-400">${i.subitem}</td>
+<td class="p-2 td-desc">${i.descricao||'-'}</td>
+<td class="p-2 td-desc text-[10px] text-slate-700">${i.produto||'-'}</td>
+<td class="text-xs p-1">
+${userP&&Number(userP.nivel_acesso)===1?
+`<select onchange="salvarResponsavel('${i.id}',this.value)" class="bg-slate-100 text-slate-900 font-semibold text-xs p-1 rounded w-full">
+<option value="">
+${responsavelTexto||'-'}
+</option>
+${listaPerfis.map(p=>`
+<option value="${p.id}" ${String(p.id)===String(i.responsavel_id)?'selected':''}>
+${p.nome_completo}
+</option>
+`).join('')}
+</select>`
+:
+`<span class="text-slate-800 font-semibold">${responsavelTexto}</span>`
+}
+</td>
+<td class="text-xs">${i.setor||'-'}</td>
+<td class="td-data" style="text-align:center;vertical-align:middle;white-space:nowrap;">
+${dataFormatada}
+</td>
+<td class="td-mes opacity-40">${jan}%</td>
+<td class="td-mes opacity-40">${fev}%</td>
+<td class="td-mes opacity-40">${mar}%</td>
+<td class="td-mes-strong text-blue-400">${abr}%</td>
+<td>
+${podeEditar?`<input type="number" min="0" max="100" step="1" class="input-mes" value="${mai}" onchange="salvar(this.value,'${i.id}','mai')">`:`<span class="td-mes-strong text-yellow-400">${mai}%</span>`}
+</td>
+<td class="td-total text-emerald-400">${total.toFixed(2)}%</td>
+</tr>`
+}).join('')
+let pdfHTML=''
+let itensTotal=new Set(allData.map(x=>getItemKey(x))).size
+if(userP&&(Number(userP.nivel_acesso)<=2||userP.permissao_pdf===true)){
+if(document.getElementById('view-resumo')&&!document.getElementById('view-resumo').classList.contains('hidden')){
+pdfHTML=`<button onclick="gerarPDFResumo()" class="btn-pdf">PDF RESUMO</button>`
+}
+if(document.getElementById('view-mensal')&&!document.getElementById('view-mensal').classList.contains('hidden')){
+pdfHTML=`<button onclick="gerarPDFMonitoramento()" class="btn-pdf">PDF MONITORAMENTO</button>`
+}
+if(document.getElementById('view-analise')&&!document.getElementById('view-analise').classList.contains('hidden')){
+pdfHTML=`<button onclick="gerarPDFGraficos()" class="btn-pdf">PDF GRÁFICOS</button>`
+}
+if(document.getElementById('view-concluidos')&&!document.getElementById('view-concluidos').classList.contains('hidden')){
+pdfHTML=`<button onclick="gerarPDFCumpridos()" class="btn-pdf">PDF 100%</button>`
+}
+}
+document.getElementById('pdf-container').innerHTML=`
+<div class="flex gap-2 items-center flex-wrap">
+${pdfHTML}
+<span class="text-xs text-emerald-400 font-black ml-2">${itensTotal}</span>
+<span class="text-[9px] text-slate-500">ITENS</span>
+<span class="text-xs text-emerald-400 font-black ml-2">${totalRegistros}</span>
+<span class="text-[9px] text-slate-500">SUBITENS</span>
+</div>
+`
+}
+  
+function renderConcluidos(){
+
+let box=document.getElementById('concluidos-container')
+let lista=document.getElementById('concluidos-list')
+
+if(!box||!lista)return
+
+box.innerHTML=''
+lista.innerHTML=''
+
+let dados=[...allData]
+.filter(i=>getTotal(i)>=100)
+.sort(compareSubitem)
+
+let total=document.createElement('div')
+
+total.className='rounded-2xl shadow-2xl flex items-center justify-center p-3'
+
+total.style.background='linear-gradient(135deg,#bbf7d0,#86efac,#dcfce7)'
+total.style.minHeight='120px'
+
+total.innerHTML=`
+<div class="text-center w-full">
+<div style="font-size:9px;font-weight:900;color:#166534;line-height:1;">
+TOTAL GERAL
+</div>
+
+<div style="font-size:34px;font-weight:900;color:#166534;line-height:1;">
+${dados.length}
+</div>
+<div style="font-size:11px;font-weight:900;color:#166534;line-height:1.1;">
+SUBITENS 100%
+</div>
+</div>
+`
+
+box.appendChild(total)
+
+dados.forEach(i=>{
+
+let card=document.createElement('div')
+
+card.className='card-micro shadow-lg'
+
+card.style.background='linear-gradient(135deg,#1e3a8a,#0f172a)'
+card.style.color='#ffffff'
+
+card.innerHTML=`
+<div class="text-center w-full">
+<div style="font-size:12px;font-weight:900;color:#ffffff;">
+SUBITEM
+</div>
+
+<div style="font-size:28px;font-weight:900;color:#ffffff;">
+${i.subitem}
+</div>
+
+<div style="font-size:13px;font-weight:900;color:#bfdbfe;">
+ITEM ${i.item||'-'}
+</div>
+</div>
+`
+
+box.appendChild(card)
+
+let div=document.createElement('div')
+
+div.className='border-b border-slate-300 pb-1 mb-1'
+
+div.innerHTML=`
+
+<div style="font-size:15px;font-weight:900;color:#000000;line-height:1;">
+${i.subitem}
+</div>
+
+<div style="font-size:11px;line-height:1.05;color:#000000;font-weight:700;margin-top:1px;">
+${i.descricao||'-'}
+</div>
+
+<div style="font-size:10px;line-height:1;color:#0f172a;font-weight:900;margin-top:1px;">
+PRODUTO: ${i.produto||'-'}
+</div>
+
+<div style="font-size:10px;line-height:1;color:#1e3a8a;font-weight:900;margin-top:1px;">
+RESPONSÁVEL: ${i.responsavel||'-'}
+</div>
+`
+
+lista.appendChild(div)
+
+})
+
+}
+
+window.editarPerfilTCERO=async function(id){
+let {data,error}=await client.from('perfistce').select('*').eq('id',id).single()
+if(error||!data){
+alert('Erro ao carregar perfil')
+return
+}
+let nome=prompt('Nome completo:',data.nome_completo||'')
+if(nome===null)return
+let username=prompt('Usuário:',data.username||'')
+if(username===null)return
+let cargo=prompt('Cargo:',data.cargo||'')
+if(cargo===null)return
+let nivel=prompt('Nível de acesso:',data.nivel_acesso||1)
+if(nivel===null)return
+let {error:updateError}=await client.from('perfistce').update({
+nome_completo:nome,
+username:username,
+cargo:cargo,
+nivel_acesso:Number(nivel||1)
+}).eq('id',id)
+if(updateError){
+console.error(updateError)
+alert('Erro ao atualizar perfil')
+return
+}
+alert('Perfil atualizado com sucesso')
+switchTab('tcero')
+}
+
+
+function switchTab(t){
+localStorage.setItem('activeTab',t)
+document.querySelectorAll('.tab-view').forEach(v=>{
+v.classList.add('hidden')
+v.style.display='none'
+})
+document.querySelectorAll('.tab-btn').forEach(b=>{
+b.classList.remove('tab-active')
+})
+let view=document.getElementById('view-'+t)
+if(view){
+view.classList.remove('hidden')
+view.style.display='block'
+view.style.visibility='visible'
+view.style.opacity='1'
+}
+
+let tab=document.getElementById('tab-'+t)
+
+if(tab){
+tab.classList.add('tab-active')
+}
+
+if(t==='analise'){
+setTimeout(()=>{
+initPainelGrafico()
+
+if(window.graficoResumo&&typeof window.graficoResumo.resize==='function'){
+window.graficoResumo.resize()
+}
+
+if(window.graficoMonitoramento&&typeof window.graficoMonitoramento.resize==='function'){
+window.graficoMonitoramento.resize()
+}
+
+if(window.graficoGeral&&typeof window.graficoGeral.resize==='function'){
+window.graficoGeral.resize()
+}
+
+document.querySelectorAll('canvas').forEach(c=>{
+c.style.display='block'
+c.style.visibility='visible'
+c.style.opacity='1'
+})
+
+},350)
+}
+
+if(t==='perfis'){
+setTimeout(()=>{
+carregarPerfis()
+},200)
+}
+
+if(t==='usuarios'){
+setTimeout(()=>{
+carregarUsuarios()
+},200)
+}
+
+if(t==='tcero'){
+setTimeout(()=>{
+carregarTCERO()
+},200)
+}
+
+setTimeout(()=>{
+renderTable()
+},100)
+
+}
+
+function fecharDrill(){filtroItemAtivo=null;renderResumo();document.getElementById('btn-voltar').style.display='none'}
+function logout(){localStorage.clear();location.reload()}
+</script>
+
+
+
+
+
+
+
+  
+<script>
+function getMesAtualIndex(){return new Date().getMonth()}
+async function salvarResponsavel(id,novoId){
+if(!novoId)return
+if(userP && Number(userP.nivel_acesso)!=1){alert("Sem permissão");return}
+let p=(window.perfis||[]).find(x=>String(x.id)===String(novoId))
+if(!p){alert("Perfil não encontrado");return}
+let {error}=await client.from('deliberacoes').update({responsavel:p.nome_completo,responsavel_id:p.id}).eq('id',id)
+if(error){console.error(error);alert("Erro ao salvar responsável");return}
+let item=allData.find(x=>String(x.id)===String(id))
+if(item){item.responsavel=p.nome_completo;item.responsavel_id=p.id}
+renderTable()
+}
+function renderSelects(){
+let selItem=document.getElementById('sel-item')
+let selSub=document.getElementById('sel-sub')
+if(!selItem||!selSub)return
+let itens=[...new Set(allData.map(i=>(i.subitem||'').split('.')[0]).filter(x=>x))]
+selItem.innerHTML='<option value="total">TOTAL</option>'+itens.map(i=>`<option value="${i}">ITEM ${i}</option>`).join('')
+selItem.onchange=()=>updateSubSelect()
+updateSubSelect()
+}
+function updateSubSelect(){
+let selItem=document.getElementById('sel-item')
+let selSub=document.getElementById('sel-sub')
+if(!selItem||!selSub)return
+let v=selItem.value
+let lista=v==='total'?allData:allData.filter(i=>(i.subitem||'').startsWith(v+'.'))
+selSub.innerHTML=lista.map(i=>`<option value="${i.subitem}">${i.subitem}</option>`).join('')
+if(typeof renderChart==="function")renderChart()
+}
+async function gerarRelatorioPDF(){
+
+const {jsPDF}=window.jspdf
+
+let query=client
+.from('deliberacoes')
+.select('*')
+
+if(userP && Number(userP.nivel_acesso)!=1){
+query=query.eq('responsavel_id',userP.id)
+}
+
+let {data,error}=await query
+
+if(error||!data){
+alert("Erro ao gerar PDF")
+return
+}
+
+let lista=(data||[])
+
+let doc=new jsPDF('p','mm','a4')
+
+const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+const mesesTxt=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ']
+
+function calcMes(mes){
+if(!lista.length)return 0
+return Math.round(
+lista.reduce((acc,c)=>acc+Number(c[mes]||0),0)/lista.length
+)
+}
+
+let totalItens=[...new Set(lista.map(x=>(x.subitem||'').split('.')[0]))].length
+let totalSubitens=lista.length
+
+let mediaGeral=Math.round(
+lista.reduce((acc,c)=>{
+return acc+Math.max(
+Number(c.jan||0),
+Number(c.fev||0),
+Number(c.mar||0),
+Number(c.abr||0),
+Number(c.mai||0),
+Number(c.jun||0),
+Number(c.jul||0),
+Number(c.ago||0),
+Number(c.set||0),
+Number(c.out||0),
+Number(c.nov||0),
+Number(c.dez||0)
+)
+},0)/(lista.length||1)
+)
+
+let concluidos=lista.filter(i=>
+Math.max(
+Number(i.jan||0),
+Number(i.fev||0),
+Number(i.mar||0),
+Number(i.abr||0),
+Number(i.mai||0),
+Number(i.jun||0),
+Number(i.jul||0),
+Number(i.ago||0),
+Number(i.set||0),
+Number(i.out||0),
+Number(i.nov||0),
+Number(i.dez||0)
+)>=100
+).length
+
+let pendentes=totalSubitens-concluidos
+
+doc.setFontSize(14)
+doc.setTextColor(0,0,0)
+
+doc.text(
+userP && Number(userP.nivel_acesso)==1
+?"RELATÓRIO GERAL - TAG SEDAM 2026"
+:"RELATÓRIO INDIVIDUAL - "+(userP.nome_completo||''),
+10,
+12
+)
+
+doc.setFontSize(8)
+
+doc.text(
+"Tribunal de Contas do Estado de Rondônia - Monitoramento Estratégico",
+10,
+18
+)
+
+let rows=lista.map(i=>{
+
+let total=Math.max(
+Number(i.jan||0),
+Number(i.fev||0),
+Number(i.mar||0),
+Number(i.abr||0),
+Number(i.mai||0),
+Number(i.jun||0),
+Number(i.jul||0),
+Number(i.ago||0),
+Number(i.set||0),
+Number(i.out||0),
+Number(i.nov||0),
+Number(i.dez||0)
+)
+
+return[
+i.subitem||'-',
+i.descricao||'-',
+i.produto||'-',
+total+'%'
+]
+
+})
+
+doc.autoTable({
+startY:24,
+head:[['Subitem','Descrição Completa','Produtos','Responsável','Total']],
+body:rows,
+theme:'grid',
+styles:{
+fontSize:7,
+cellPadding:2,
+overflow:'linebreak',
+valign:'middle',
+textColor:[0,0,0]
+},
+headStyles:{
+fillColor:[180,150,110],
+textColor:[0,0,0],
+fontStyle:'bold'
+},
+columnStyles:{
+0:{cellWidth:18},
+1:{cellWidth:108},
+2:{cellWidth:45},
+3:{cellWidth:14,halign:'center'}
+},
+margin:{
+top:20,
+bottom:38,
+left:5,
+right:5
+},
+didDrawPage:function(data){
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+doc.setFillColor(255,255,255)
+doc.rect(0,pageHeight-34,pageWidth,34,'F')
+doc.setTextColor(90,90,90)
+doc.setFontSize(7)
+doc.text('Tribunal de Contas do Estado de Rondônia - TAG SEDAM 2026',6,pageHeight-26)
+doc.setFontSize(4)
+doc.text(NOTA_TECNICA_PDF,10,pageHeight-18,{maxWidth:pageWidth-55,align:'justify'})
+
+}
+})
+
+let finalY=doc.lastAutoTable.finalY+10
+
+if(finalY>240){
+doc.addPage()
+finalY=20
+}
+
+doc.setFontSize(12)
+doc.setTextColor(0,0,0)
+doc.text("RESUMO EXECUTIVO E INDICADORES",10,finalY)
+
+finalY+=8
+
+doc.setFontSize(9)
+
+doc.text("• Quantidade total de itens estratégicos: "+totalItens,10,finalY)
+finalY+=6
+
+doc.text("• Quantidade total de subitens monitorados: "+totalSubitens,10,finalY)
+finalY+=6
+
+doc.text("• Quantidade de subitens com execução integral (100%): "+concluidos,10,finalY)
+finalY+=6
+
+doc.text("• Quantidade de subitens pendentes ou parciais: "+pendentes,10,finalY)
+finalY+=6
+
+doc.text("• Média geral consolidada de execução do TAG: "+mediaGeral+"%",10,finalY)
+finalY+=10
+
+doc.setFontSize(10)
+doc.text("DESEMPENHO MÉDIO POR MÊS",10,finalY)
+
+finalY+=8
+
+meses.forEach((m,idx)=>{
+
+let perc=calcMes(m)
+
+doc.setFontSize(9)
+
+doc.text(
+"• "+mesesTxt[idx]+" → "+perc+"% de execução média consolidada",
+14,
+finalY
+)
+
+finalY+=5
+
+if(finalY>280){
+doc.addPage()
+finalY=20
+}
+
+})
+
+finalY+=5
+
+doc.setFontSize(9)
+
+let melhorMes=''
+let maior=-1
+
+meses.forEach((m,idx)=>{
+let v=calcMes(m)
+if(v>maior){
+maior=v
+melhorMes=mesesTxt[idx]
+}
+})
+
+doc.text(
+"Conclusão Analítica: O monitoramento demonstra evolução progressiva das ações estratégicas vinculadas ao TAG SEDAM 2026, apresentando maior desempenho consolidado no mês de "+melhorMes+", com média de "+maior+"% de execução. Os indicadores refletem avanço operacional das unidades responsáveis, permitindo acompanhamento gerencial, auditoria contínua e avaliação comparativa da efetividade das entregas institucionais.",
+10,
+finalY,
+{maxWidth:190}
+)
+
+const totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+195,
+290,
+{align:'right'}
+)
+
+}
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+pageWidth-10,
+pageHeight-6,
+{align:'right'}
+)
+
+}
+doc.save(
+userP && Number(userP.nivel_acesso)==1
+?'relatorio_geral_tag_sedam.pdf'
+:'relatorio_'+(userP.username||'usuario')+'.pdf'
+)
+
+}
+  
+function mesFromData(data){return['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][new Date(data).getMonth()]}
+async function salvar(valor,id,campo){
+let v=parseFloat(String(valor).replace(',','.'));if(isNaN(v))v=0
+if(v<0||v>100){alert("Informe 0 a 100");return}
+let podeEditar=(userP && Number(userP.nivel_acesso)==1||userP && Number(userP.nivel_acesso)==2||userP && Number(userP.nivel_acesso)==3)
+if(!podeEditar){alert("Sem permissão");return}
+let {error}=await client.from('deliberacoes').update({[campo]:v}).eq('id',id)
+if(error){console.error(error);alert("Erro ao salvar");return}
+carregarDados()
+}
+async function alterarResponsavel(id,respId){
+let p=(window.perfis||[]).find(x=>String(x.id)===String(respId))
+if(!p)return
+let {error}=await client.from('deliberacoes').update({responsavel:p.nome_completo,responsavel_id:p.id}).eq('id',id)
+if(error){console.error(error);alert("Erro ao salvar responsável");return}
+carregarDados()
+}
+function aplicarFiltroData(){filtroDataInicio=document.getElementById('dataInicio').value||null;filtroDataFim=document.getElementById('dataFim').value||null;renderTable();renderResumo()}
+function limparFiltroData(){document.getElementById('dataInicio').value='2025-01-01';document.getElementById('dataFim').value='2028-01-01';filtroDataInicio='2025-01-01';filtroDataFim='2028-01-01';renderTable();renderResumo()}
+function toggleOcultarConcluidos(){ocultarConcluidos=!ocultarConcluidos;let b=document.getElementById('btn-ocultar');if(b)b.innerText=ocultarConcluidos?'MOSTRAR 100%':'OCULTAR 100%';renderTable();renderResumo()}
+function truncarTexto(t,l=60){if(!t)return'-';if(t.length<=l)return t;let c=t.substring(0,l);let u=c.lastIndexOf(' ');if(u>0)c=c.substring(0,u);return c+'...'}
+let chartMaster=null
+
+function initPainelGrafico(){
+
+let item=document.getElementById('filtroItem')
+let sub=document.getElementById('filtroSubitem')
+
+if(!item||!sub)return
+
+item.onchange=null
+sub.onchange=null
+
+popularItens()
+
+atualizarLista3()
+
+item.onchange=()=>{
+
+atualizarLista3()
+
+setTimeout(()=>{
+renderGraficoMaster()
+},50)
+
+}
+
+sub.onchange=()=>{
+
+renderGraficoMaster()
+
+}
+
+renderGraficoMaster()
+
+}
+
+async function sincronizarResponsaveis(){
+
+let {data:delibs}=await client
+.from('deliberacoes')
+.select('id,responsavel_id')
+
+let listaPerfis=[
+...(window.perfis||[]),
+...(window.perfisTCERO||[])
+]
+
+for(let d of (delibs||[])){
+
+if(!d.responsavel_id)continue
+
+let perfil=listaPerfis.find(p=>
+String(p.id)===String(d.responsavel_id)
+)
+
+if(!perfil)continue
+
+await client
+.from('deliberacoes')
+.update({
+responsavel:perfil.nome_completo
+})
+.eq('id',d.id)
+
+}
+
+console.log('Responsáveis sincronizados')
+
+}
+  
+function popularItens(){
+
+let sel=document.getElementById('filtroItem')
+
+if(!sel)return
+
+let mapa={}
+
+allData.forEach(i=>{
+
+let n=(i.item||i.numitem||'').toString().trim()
+
+if(!n)return
+
+if(!mapa[n]){
+mapa[n]={
+num:n,
+descricao:
+descItens[n]||
+i.descricaoitem||
+'SEM DESCRIÇÃO'
+}
+}
+
+})
+
+let lista=Object.values(mapa)
+.sort((a,b)=>
+a.num.localeCompare(b.num,undefined,{numeric:true})
+)
+
+sel.innerHTML=`
+<option value="todos">
+TODOS OS ITENS
+</option>
+`+
+lista.map(i=>`
+<option value="${i.num}">
+ITEM ${i.num} - ${i.descricao}
+</option>
+`).join('')
+
+}
+
+function atualizarLista3(){
+
+let sel=document.getElementById('filtroSubitem')
+
+if(!sel)return
+
+let itemSelecionado=document.getElementById('filtroItem').value
+
+let lista=itemSelecionado==='todos'
+?allData
+:allData.filter(i=>
+String(i.item||i.numitem||'')===String(itemSelecionado)
+)
+
+lista=lista.sort(compareSubitem)
+
+let html=''
+
+if(itemSelecionado==='todos'){
+
+html+=`
+<option value="TOTAL">
+TODOS OS SUBITENS
+</option>
+`
+
+}
+
+html+=lista.map(i=>{
+
+let total=getTotal(i)
+
+return `
+<option value="${i.id}">
+${i.subitem} • ${total}% • ${truncarTexto(i.descricao,90)}
+</option>
+`
+
+}).join('')
+
+sel.innerHTML=html
+
+}
+
+function renderGraficoMaster(){
+let el=document.getElementById('chartMaster')
+if(!el)return
+let ctx=el.getContext('2d')
+if(!ctx)return
+if(chartMaster)chartMaster.destroy()
+let tipo=document.getElementById('tipoGrafico').value
+let selItem=document.getElementById('filtroItem').value
+let selSub=document.getElementById('filtroSubitem').value
+window.graficoAtualInfo={
+tipo:tipo,
+item:selItem,
+subitem:selSub
+}
+let meses=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ']
+let mesesKey=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+let mesAtual=getMesAtualIndex()
+let labels=meses.slice(0,mesAtual+1)
+let cores=['#22c55e','#3b82f6','#f59e0b','#facc15','#a855f7','#06b6d4','#84cc16','#f97316','#eab308','#14b8a6','#6366f1','#ec4899']
+let datasets=[]
+
+function mediaMes(lista,mes){
+
+if(!lista||!lista.length)return 0
+
+let ordem=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']
+
+let idx=ordem.indexOf(mes)
+
+let total=0
+
+lista.forEach(i=>{
+
+let valor=0
+
+for(let x=idx;x>=0;x--){
+
+let k=ordem[x]
+
+if(Number(i[k]||0)>0){
+
+valor=Number(i[k]||0)
+
+break
+
+}
+
+}
+
+total+=valor
+
+})
+
+return Math.round(total/(lista.length||1))
+
+}
+if(tipo==='subitem'){
+if(selSub==='TOTAL'){
+let valores=[]
+for(let m=0;m<=mesAtual;m++){
+let mesKey=mesesKey[m]
+valores.push(mediaMes(allData,mesKey))
+}
+window.graficoAtualInfo={
+tipo:'todos',
+jan:valores[0]||0,
+fev:valores[1]||0,
+mar:valores[2]||0,
+abr:valores[3]||0,
+mai:valores[4]||0
+}
+datasets=[{
+label:'TOTAL GERAL TAG SEDAM',
+data:valores,
+backgroundColor:cores.slice(0,mesAtual+1),
+borderRadius:8
+}]
+document.getElementById('descSubitem').innerHTML=`
+<div style="font-size:24px;font-weight:900;color:#000000;margin-bottom:12px;">
+TOTAL GERAL CONSOLIDADO DO TAG SEDAM 2026
+</div>
+<div style="font-size:18px;line-height:1.8;color:#000000;font-weight:700;">
+O gráfico demonstra a evolução média consolidada de todos os itens e subitens monitorados no Plano de Ação do TAG SEDAM 2026.
+<br><br>
+JAN: <b>${valores[0]}%</b> |
+FEV: <b>${valores[1]}%</b> |
+MAR: <b>${valores[2]}%</b> |
+ABR: <b>${valores[3]}%</b> |
+MAI: <b>${valores[4]}%</b>
+</div>
+`
+}else{
+let i=allData.find(x=>String(x.id)===String(selSub))
+if(!i)return
+let valores=[
+Number(i.jan||0),
+Number(i.fev||0),
+Number(i.mar||0),
+Number(i.abr||0),
+Number(i.mai||0),
+Number(i.jun||0),
+Number(i.jul||0),
+Number(i.ago||0),
+Number(i.set||0),
+Number(i.out||0),
+Number(i.nov||0),
+Number(i.dez||0)
+]
+window.graficoAtualInfo={
+tipo:'subitem',
+item:i.item||'',
+subitem:i.subitem||'',
+jan:valores[0]||0,
+fev:valores[1]||0,
+mar:valores[2]||0,
+abr:valores[3]||0,
+mai:valores[4]||0
+}
+datasets=[{
+label:i.subitem,
+data:valores.slice(0,mesAtual+1),
+backgroundColor:cores.slice(0,mesAtual+1),
+borderRadius:6
+}]
+document.getElementById('descSubitem').innerHTML=`
+<div class="text-sm font-black text-emerald-400 mb-2">
+SUBITEM ${i.subitem}
+</div>
+<div class="text-xs leading-relaxed text-slate-300">
+${i.descricao||'-'}
+<br><br>
+<b>Produto:</b> ${i.produto||'-'}
+<br><br>
+<b>Responsável:</b> ${i.responsavel||'-'}
+</div>
+`
+}
+}
+if(!datasets.length)return
+chartMaster=new Chart(ctx,{
+type:'bar',
+data:{
+labels,
+datasets
+},
+options:{
+responsive:true,
+plugins:{
+legend:{
+display:true,
+labels:{
+color:'#000'
+}
+},
+tooltip:{
+callbacks:{
+label:(ctx)=>ctx.raw+'%'
+}
+},
+datalabels:{
+color:'#000',
+anchor:'end',
+align:'top',
+font:{
+weight:'bold',
+size:12
+},
+formatter:(v)=>v+'%'
+}
+},
+scales:{
+y:{
+beginAtZero:true,
+max:100,
+ticks:{
+callback:(v)=>v+'%'
+}
+}
+}
+},
+plugins:[ChartDataLabels]
+})
+}
+
+function gerarCSV(d,n){
+if(!d||!d.length)return
+let c=Object.keys(d[0])
+let csv=c.join(";")+"\n"
+d.forEach(l=>{
+csv+=c.map(k=>`"${(l[k]??'').toString().replace(/"/g,'""')}"`).join(";")+"\n"
+})
+let b=new Blob([csv],{type:"text/csv"})
+let a=document.createElement("a")
+a.href=URL.createObjectURL(b)
+a.download=n+"_"+Date.now()+".csv"
+a.click()
+}
+function gerarJSON(o){
+let b=new Blob([JSON.stringify(o,null,2)],{type:"application/json"})
+let a=document.createElement("a")
+a.href=URL.createObjectURL(b)
+a.download="backup_"+Date.now()+".json"
+a.click()
+}
+const NOTA_TECNICA_PDF=`As informações constantes neste painel, gráficos, indicadores e relatórios possuem caráter preliminar e meramente informativo, sendo baseadas nos dados declarados e apresentados até o presente momento pelos jurisdicionados envolvidos. Ressalta-se que tais informações ainda não passaram pela análise técnica de consistência documental, verificação de evidências, validação metodológica e conferência conclusiva pela equipe técnica de auditores designados. A validação oficial ocorrerá posteriormente, por meio da análise técnica dos relatórios de execução, documentos comprobatórios e demais evidências encaminhadas pelos órgãos e entidades responsáveis, culminando na emissão do respectivo Relatório de Monitoramento e demais manifestações técnicas oficiais do Tribunal de Contas.`
+function gerarPDFBackup(d){
+const {jsPDF}=window.jspdf
+let doc=new jsPDF()
+doc.setFontSize(10)
+doc.text("BACKUP DELIBERAÇÕES",10,10)
+let rows=d.map(i=>[
+i.subitem,
+(i.descricao||'').substring(0,40),
+i.responsavel||'-',
+Math.max(i.jan||0,i.fev||0,i.mar||0,i.abr||0,i.mai||0,i.jun||0,i.jul||0,i.ago||0,i.set||0,i.out||0,i.nov||0,i.dez||0)+'%'
+])
+doc.autoTable({
+head:[['Subitem','Descrição','Responsável','%']],
+body:rows,
+startY:24,
+styles:{fontSize:6},
+margin:{
+top:20,
+bottom:38,
+left:5,
+right:5
+},
+didDrawPage:function(data){
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFillColor(255,255,255)
+doc.rect(0,pageHeight-34,pageWidth,34,'F')
+doc.setTextColor(90,90,90)
+doc.setFontSize(7)
+doc.text('Tribunal de Contas do Estado de Rondônia - TAG SEDAM 2026',6,pageHeight-26)
+doc.setFontSize(4)
+doc.text(NOTA_TECNICA_PDF,10,pageHeight-18,{maxWidth:pageWidth-55,align:'justify'})
+
+}
+})
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+pageWidth-10,
+pageHeight-6,
+{align:'right'}
+)
+
+}
+doc.save("backup_deliberacoes.pdf")
+}
+async function gerarPDFResumo(){
+const {jsPDF}=window.jspdf
+let doc=new jsPDF('p','mm','a4')
+let lista=[...allData].sort(compareSubitem)
+doc.setFontSize(14)
+doc.text('RESUMO EXECUTIVO - TAG SEDAM 2026',10,12)
+let rows=lista.map(i=>{
+let total=getTotal(i)
+return[
+i.subitem||'-',
+i.descricao||'-',
+i.produto||'-',
+total+'%'
+]
+})
+doc.autoTable({
+startY:24,
+head:[['Subitem','Descrição Completa','Produto Estratégico','%']],
+body:rows,
+styles:{
+fontSize:7,
+overflow:'linebreak'
+},
+columnStyles:{
+0:{cellWidth:18},
+1:{cellWidth:92},
+2:{cellWidth:62},
+3:{cellWidth:18}
+},
+margin:{
+top:20,
+bottom:38,
+left:5,
+right:5
+},
+didDrawPage:function(data){
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFillColor(255,255,255)
+doc.rect(0,pageHeight-34,pageWidth,34,'F')
+doc.setTextColor(90,90,90)
+doc.setFontSize(7)
+doc.text('Tribunal de Contas do Estado de Rondônia - TAG SEDAM 2026',6,pageHeight-26)
+doc.setFontSize(4)
+doc.text(NOTA_TECNICA_PDF,10,pageHeight-18,{maxWidth:pageWidth-55,align:'justify'})
+
+}
+})
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+pageWidth-10,
+pageHeight-6,
+{align:'right'}
+)
+
+}
+doc.save('pdf_resumo_tag_sedam.pdf')
+}
+async function gerarPDFMonitoramento(){
+const {jsPDF}=window.jspdf
+let doc=new jsPDF('l','mm','a4')
+let lista=[...allData].sort(compareSubitem)
+doc.setFontSize(14)
+doc.text('MONITORAMENTO COMPLETO - TAG SEDAM 2026',10,12)
+let rows=lista.map(i=>{
+let total=getTotal(i)
+return[
+i.subitem||'-',
+i.descricao||'-',
+i.produto||'-',
+i.responsavel||'-',
+(i.jan||0)+'%',
+(i.fev||0)+'%',
+(i.mar||0)+'%',
+(i.abr||0)+'%',
+(i.mai||0)+'%',
+total+'%'
+]
+})
+doc.autoTable({
+startY:24,
+head:[['Sub','Descrição Completa','Produtos','Responsável','JAN','FEV','MAR','ABR','MAI','TOTAL']],
+body:rows,
+theme:'grid',
+styles:{
+fontSize:6,
+overflow:'linebreak',
+cellPadding:2,
+valign:'middle'
+},
+headStyles:{
+fillColor:[180,150,110],
+textColor:[0,0,0],
+fontStyle:'bold'
+},
+columnStyles:{
+0:{cellWidth:14},
+1:{cellWidth:82},
+2:{cellWidth:72},
+3:{cellWidth:40},
+4:{cellWidth:10},
+5:{cellWidth:10},
+6:{cellWidth:10},
+7:{cellWidth:10},
+8:{cellWidth:10},
+9:{cellWidth:16}
+},
+margin:{
+top:20,
+bottom:38,
+left:5,
+right:5
+},
+didDrawPage:function(data){
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFillColor(255,255,255)
+doc.rect(0,pageHeight-34,pageWidth,34,'F')
+doc.setTextColor(90,90,90)
+doc.setFontSize(7)
+doc.text('Tribunal de Contas do Estado de Rondônia - TAG SEDAM 2026',6,pageHeight-26)
+doc.setFontSize(4)
+doc.text(NOTA_TECNICA_PDF,10,pageHeight-18,{maxWidth:pageWidth-55,align:'justify'})
+
+}
+})
+let finalY=doc.lastAutoTable.finalY+10
+doc.setFontSize(10)
+let total100=lista.filter(i=>getTotal(i)>=100).length
+let media=Math.round(lista.reduce((acc,c)=>acc+getTotal(c),0)/(lista.length||1))
+doc.text('O monitoramento consolidado demonstra '+lista.length+' subitens estratégicos acompanhados, sendo '+total100+' integralmente cumpridos (100%). A média geral consolidada do painel corresponde a '+media+'% de execução. A análise evidencia o comportamento evolutivo das entregas institucionais, permitindo rastreabilidade operacional, acompanhamento gerencial, fiscalização técnica e validação futura das evidências vinculadas aos produtos estratégicos declarados pelos jurisdicionados.',10,finalY,{maxWidth:260})
+doc.save('pdf_monitoramento_tag_sedam.pdf')
+}
+async function gerarPDFGraficos(){
+
+const {jsPDF}=window.jspdf
+
+let doc=new jsPDF('p','mm','a4')
+
+doc.setFontSize(14)
+
+doc.setTextColor(0,0,0)
+
+doc.text('ANÁLISE GRÁFICA - TAG SEDAM 2026',10,12)
+
+let canvas=document.getElementById('chartMaster')
+
+if(!canvas){
+alert('Gráfico não encontrado')
+return
+}
+
+let info=window.graficoAtualInfo||{}
+
+let itemGrafico='-'
+let subitemGrafico='-'
+let descricaoGrafico='-'
+let produtoGrafico='-'
+let responsavelGrafico='-'
+let setorGrafico='-'
+let vencimentoGrafico='-'
+
+if(info.tipo==='subitem'){
+
+let registro=allData.find(x=>
+String(x.id)===String(info.subitem)||
+String(x.subitem)===String(info.subitem)
+)
+
+if(registro){
+
+itemGrafico=
+registro.item||
+registro.numitem||
+'-'
+
+subitemGrafico=
+registro.subitem||
+'-'
+
+descricaoGrafico=
+registro.descricao||
+'-'
+
+produtoGrafico=
+registro.produto||
+'-'
+
+responsavelGrafico=
+registro.responsavel||
+registro.responsavel_manual||
+'-'
+
+setorGrafico=
+registro.setor||
+'-'
+
+vencimentoGrafico=
+registro.prazo_texto||
+registro.data_inicio||
+'-'
+
+}
+
+}
+
+doc.setFontSize(12)
+
+doc.setTextColor(0,0,0)
+
+doc.text(
+'DETALHAMENTO DO ITEM ANALISADO',
+10,
+22
+)
+
+doc.setFontSize(10)
+
+doc.text(
+'ITEM: '+itemGrafico,
+10,
+32
+)
+
+doc.text(
+'SUBITEM: '+subitemGrafico,
+10,
+39
+)
+
+doc.text(
+'RESPONSÁVEL: '+responsavelGrafico,
+10,
+46
+)
+
+doc.text(
+'SETOR: '+setorGrafico,
+10,
+53
+)
+
+doc.text(
+'DATA DE VENCIMENTO: '+vencimentoGrafico,
+10,
+60
+)
+
+doc.text(
+'PRODUTO:',
+10,
+70
+)
+
+doc.text(
+produtoGrafico,
+10,
+77,
+{
+maxWidth:185
+}
+)
+
+doc.text(
+'DESCRIÇÃO:',
+10,
+92
+)
+
+doc.text(
+descricaoGrafico,
+10,
+99,
+{
+maxWidth:185
+}
+)
+
+let img=canvas.toDataURL('image/png',1.0)
+
+doc.addImage(
+img,
+'PNG',
+10,
+125,
+190,
+90
+)
+
+let textoIA=''
+
+if(info.tipo==='todos'){
+
+let jan=info.jan||0
+let fev=info.fev||0
+let mar=info.mar||0
+let abr=info.abr||0
+let mai=info.mai||0
+
+textoIA=
+'O gráfico apresentado demonstra a evolução consolidada do TOTAL GERAL dos itens e subitens monitorados no TAG SEDAM 2026. Os percentuais apurados indicam: JAN '+jan+'%, FEV '+fev+'%, MAR '+mar+'%, ABR '+abr+'% e MAI '+mai+'%. Observa-se comportamento evolutivo institucional das ações estratégicas monitoradas, permitindo análise consolidada da maturidade operacional, efetividade das entregas e desempenho progressivo das unidades responsáveis.'
+
+}else if(info.tipo==='item'){
+
+let itemAtual=info.item||'-'
+
+let lista=allData.filter(i=>
+(i.item||i.numitem||'').toString()===
+itemAtual.toString()
+)
+
+let abr=Math.round(
+lista.reduce((acc,c)=>
+acc+Number(c.abr||0)
+,0)/(lista.length||1)
+)
+
+let mai=Math.round(
+lista.reduce((acc,c)=>
+acc+Number(c.mai||0)
+,0)/(lista.length||1)
+)
+
+let evolucao=mai-abr
+
+textoIA=
+'O gráfico apresentado refere-se especificamente ao ITEM '+itemAtual+' do TAG SEDAM 2026. A análise consolidada demonstra média percentual de '+abr+'% no mês de abril e '+mai+'% no mês de maio, representando evolução de '+evolucao+' pontos percentuais. Os resultados evidenciam o comportamento operacional dos subitens vinculados ao referido item estratégico, permitindo avaliação comparativa da execução das ações, produtos entregues e desempenho institucional associado.'
+
+}else if(info.tipo==='subitem'){
+
+let reg=allData.find(x=>
+String(x.id)===String(info.subitem)||
+String(x.subitem)===String(info.subitem)
+)
+
+if(reg){
+
+textoIA=
+'O gráfico apresentado refere-se ao SUBITEM '+reg.subitem+', vinculado ao ITEM '+(reg.item||'-')+'. O comportamento gráfico demonstra a evolução temporal da execução da ação estratégica monitorada, atualmente com percentual consolidado de '+getTotal(reg)+'%. A análise permite rastreamento individualizado da entrega institucional, produtos associados, desempenho mensal e evolução progressiva da execução vinculada à unidade responsável.'
+
+}else{
+
+textoIA=
+'O gráfico apresenta análise evolutiva das metas monitoradas.'
+
+}
+
+}
+
+doc.setFontSize(10)
+
+doc.text(
+textoIA,
+10,
+223,
+{
+maxWidth:190
+}
+)
+
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+doc.setFontSize(6)
+
+doc.text(
+NOTA_TECNICA_PDF,
+10,
+282,
+{
+maxWidth:190
+}
+)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+195,
+290,
+{
+align:'right'
+}
+)
+
+}
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+pageWidth-10,
+pageHeight-6,
+{align:'right'}
+)
+
+}
+doc.save('pdf_graficos_tag_sedam.pdf')
+
+}
+  
+async function gerarPDFCumpridos(){
+
+const {jsPDF}=window.jspdf
+
+let doc=new jsPDF('l','mm','a4')
+
+let lista=allData
+.filter(i=>getTotal(i)>=100)
+.sort(compareSubitem)
+
+doc.setFontSize(16)
+
+doc.text(
+'SUBITENS 100% CUMPRIDOS - TAG SEDAM 2026',
+10,
+12
+)
+
+doc.setFontSize(10)
+
+doc.text(
+'TOTAL DE SUBITENS COM 100% DE EXECUÇÃO: '+lista.length,
+10,
+19
+)
+
+let rows=lista.map(i=>[
+i.subitem||'-',
+i.descricao||'-',
+i.produto||'-',
+i.responsavel||'-'
+])
+
+doc.autoTable({
+startY:24,
+head:[[
+'Subitem',
+'Descrição Completa',
+'Produto',
+'Responsável'
+]],
+body:rows,
+theme:'striped',
+styles:{
+fontSize:5,
+overflow:'linebreak',
+cellPadding:1.2,
+valign:'top',
+textColor:[0,0,0]
+},
+headStyles:{
+fillColor:[37,99,235],
+textColor:[255,255,255],
+fontStyle:'bold',
+fontSize:6
+},
+alternateRowStyles:{
+fillColor:[245,245,245]
+},
+columnStyles:{
+0:{cellWidth:18},
+1:{cellWidth:118},
+2:{cellWidth:78},
+3:{cellWidth:48}
+},
+margin:{
+top:20,
+left:8,
+right:8,
+bottom:38
+},
+didDrawPage:function(data){
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFillColor(255,255,255)
+doc.rect(0,pageHeight-34,pageWidth,34,'F')
+doc.setTextColor(90,90,90)
+doc.setFontSize(7)
+doc.text('Tribunal de Contas do Estado de Rondônia - TAG SEDAM 2026',6,pageHeight-26)
+doc.setFontSize(4)
+doc.text(NOTA_TECNICA_PDF,10,pageHeight-18,{maxWidth:pageWidth-55,align:'justify'})
+
+}
+})
+
+let finalY=doc.lastAutoTable.finalY+6
+
+if(finalY<170){
+
+doc.setFontSize(8)
+
+doc.setTextColor(0,0,0)
+
+doc.text(
+'O painel de subitens concluídos evidencia as ações estratégicas integralmente executadas, refletindo maturidade operacional, capacidade de entrega institucional e aderência às metas pactuadas no TAG SEDAM 2026.',
+10,
+finalY,
+{
+maxWidth:260
+}
+)
+
+}
+totalPages=doc.internal.getNumberOfPages()
+
+for(let i=1;i<=totalPages;i++){
+
+doc.setPage(i)
+
+let pageHeight=doc.internal.pageSize.height
+let pageWidth=doc.internal.pageSize.width
+
+doc.setFontSize(7)
+
+doc.text(
+'Página '+i+' de '+totalPages,
+pageWidth-10,
+pageHeight-6,
+{align:'right'}
+)
+
+}
+doc.save('pdf_100_cumpridos_tag_sedam.pdf')
+
+}
+
+function editarTCERO(id){
+let p=(window.perfisTCERO||[])
+.find(x=>String(x.id)===String(id))
+if(!p){
+alert('Perfil não encontrado')
+return
+}
+window.editTCEROId=p.id
+let nome=document.getElementById('tc_nome')
+let user=document.getElementById('tc_user')
+let senha=document.getElementById('tc_senha')
+let cargo=document.getElementById('tc_cargo')
+let nivel=document.getElementById('tc_nivel')
+let pdf=document.getElementById('tc_pdf')
+if(nome)nome.value=p.nome_completo||''
+if(user)user.value=p.username||''
+if(senha)senha.value=p.senha||''
+if(cargo)cargo.value=p.cargo||''
+if(nivel)nivel.value=p.nivel_acesso||4
+if(pdf)pdf.value=p.permissao_pdf?'true':'false'
+let btn=document.getElementById('btnSalvarTCERO')
+if(btn){
+btn.innerText='ATUALIZAR'
+btn.classList.remove('bg-blue-600')
+btn.classList.add('bg-amber-600')
+}
+window.scrollTo({
+top:0,
+behavior:'smooth'
+})
+}
+
+function novoTCERO(){
+window.editTCEROId=null
+let nome=document.getElementById('tc_nome')
+let user=document.getElementById('tc_user')
+let senha=document.getElementById('tc_senha')
+let cargo=document.getElementById('tc_cargo')
+let nivel=document.getElementById('tc_nivel')
+let pdf=document.getElementById('tc_pdf')
+let visual=document.getElementById('tc_visualizacao')
+if(nome)nome.value=''
+if(user)user.value=''
+if(senha)senha.value=''
+if(cargo)cargo.value=''
+if(nivel)nivel.value='4'
+if(pdf)pdf.value='NÃO'
+if(visual)visual.value='SUBITEM'
+let btn=document.getElementById('btnSalvarTCERO')
+if(btn){
+btn.innerText='INSERIR'
+btn.classList.remove('bg-amber-600')
+btn.classList.add('bg-blue-600')
+}
+window.scrollTo({
+top:0,
+behavior:'smooth'
+})
+}
+
+window.salvarLinhaTCERO=async function(id){
+let nome=document.getElementById('nome_'+id)?.value||''
+let username=document.getElementById('user_'+id)?.value||''
+let cargo=document.getElementById('cargo_'+id)?.value||''
+let nivel=document.getElementById('nivel_'+id)?.value||1
+let {error}=await client
+.from('perfistce')
+.update({
+nome_completo:nome,
+username:username,
+cargo:cargo,
+nivel_acesso:Number(nivel)
+})
+.eq('id',id)
+if(error){
+console.error(error)
+alert('Erro ao salvar')
+return
+}
+await carregarTCERO()
+}
+
+async function salvarPerfilTCERO(){
+let nome=document.getElementById('tc_nome').value.trim()
+let user=document.getElementById('tc_user').value
+.trim()
+.toLowerCase()
+let senha=document.getElementById('tc_senha').value.trim()
+let cargo=document.getElementById('tc_cargo').value.trim()
+let permissao_pdf=
+document.getElementById('tc_pdf').value==='true'
+let nivel=Number(
+document.getElementById('tc_nivel').value||4
+)
+if(!nome||!user){
+alert('Preencha nome e usuário')
+return
+}
+let payload={
+nome_completo:nome,
+username:user,
+senha:senha,
+cargo:cargo,
+nivel_acesso:nivel,
+permissao_pdf:permissao_pdf
+}
+let res=null
+if(window.editTCEROId){
+res=await client
+.from('perfistce')
+.update(payload)
+.eq('id',window.editTCEROId)
+}else{
+res=await client
+.from('perfistce')
+.insert(payload)
+}
+if(res.error){
+console.error(res.error)
+alert('Erro ao salvar')
+return
+}
+window.editTCEROId=null
+document.getElementById('tc_nome').value=''
+document.getElementById('tc_user').value=''
+document.getElementById('tc_senha').value=''
+document.getElementById('tc_cargo').value=''
+document.getElementById('tc_pdf').value='NÃO'
+document.getElementById('tc_nivel').value='4'
+document.getElementById('tc_visualizacao').value='SUBITEM'
+let btn=document.getElementById('btnSalvarTCERO')
+if(btn){
+btn.innerText='INSERIR'
+btn.classList.remove('bg-amber-600')
+btn.classList.add('bg-blue-700')
+}
+await carregarTCERO()
+alert('Registro salvo com sucesso')
+}
+
+async function excluirTCERO(id){
+if(
+!['manoel','vagner','gleidi']
+.includes(
+(userP.username||'').toLowerCase()
+)
+){
+alert('Sem permissão')
+return
+}
+let p=(window.perfisTCERO||[])
+.find(x=>String(x.id)===String(id))
+if(!p){
+alert('Perfil não encontrado')
+return
+}
+if(
+['manoel','vagner','gleidi']
+.includes(
+(p.username||'').toLowerCase()
+)
+){
+alert('Este perfil não pode ser excluído')
+return
+}
+if(!confirm('Excluir perfil '+(p.nome_completo||'')+' ?')){
+return
+}
+let {error}=await client
+.from('perfistce')
+.delete()
+.eq('id',id)
+if(error){
+console.error(error)
+alert('Erro ao excluir')
+return
+}
+await carregarTCERO()
+alert('Perfil excluído com sucesso')
+}
+window.modoEdicaoTCERO=false
+
+function ativarEdicaoTCERO(){
+
+if(
+!['manoel','vagner','gleidi']
+.includes(
+((window.userP&&window.userP.username)||'').toLowerCase()
+)
+){
+alert('Sem permissão')
+return
+}
+
+window.modoEdicaoTCERO=true
+
+document.querySelectorAll('.campo-editavel-tcero').forEach(e=>{
+e.disabled=false
+e.classList.remove('opacity-70')
+})
+
+let btnEditar=document.getElementById('btnEditarTCERO')
+let btnSalvar=document.getElementById('btnSalvarTCERO')
+
+if(btnEditar){
+btnEditar.classList.add('hidden')
+}
+
+if(btnSalvar){
+btnSalvar.hidden=false
+btnSalvar.style.display='inline-flex'
+btnSalvar.style.visibility='visible'
+btnSalvar.style.opacity='1'
+btnSalvar.classList.remove('hidden')
+}
+
+}
+
+async function salvarEdicaoTCERO(){
+
+let linhas=[...document.querySelectorAll('.linha-tcero')]
+
+for(let l of linhas){
+
+let id=l.dataset.id
+
+let nome=document.getElementById('nome_'+id)?.value||''
+let username=document.getElementById('user_'+id)?.value||''
+let cargo=document.getElementById('cargo_'+id)?.value||''
+let nivel=document.getElementById('nivel_'+id)?.value||1
+let permissao=document.getElementById('pdf_'+id)?.value==='SIM'
+
+let {error}=await client
+.from('perfistce')
+.update({
+nome_completo:nome,
+username:username,
+cargo:cargo,
+nivel_acesso:Number(nivel),
+permissao_pdf:permissao
+})
+.eq('id',id)
+
+if(error){
+console.error(error)
+alert('Erro ao salvar alterações')
+return
+}
+
+}
+
+window.modoEdicaoTCERO=false
+
+await carregarTCERO()
+
+alert('Alterações salvas com sucesso')
+
+}
+
+async function carregarTCERO(){
+
+let lista=document.getElementById('listaTCERO')
+
+if(!lista)return
+
+lista.innerHTML='<div class="p-4 font-bold">Carregando Perfis TCE-RO...</div>'
+
+let {data,error}=await client
+.from('perfistce')
+.select('*')
+.order('nome_completo',{ascending:true})
+
+if(error){
+console.error(error)
+lista.innerHTML='<div class="p-4 text-red-700 font-bold">Erro ao carregar.</div>'
+return
+}
+
+window.perfisTCERO=data||[]
+
+let podeEditar=
+['manoel','vagner','gleidi']
+.includes(
+((window.userP&&window.userP.username)||'').toLowerCase()
+)
+
+document.getElementById('boxCadastroTCERO').style.display=
+podeEditar?'flex':'none'
+
+if(!data||!data.length){
+lista.innerHTML='<div class="p-4 font-bold">Nenhum perfil encontrado.</div>'
+return
+}
+
+lista.innerHTML=`<div class="flex justify-end items-center gap-2 mb-3">
+${podeEditar?`<button id="btnEditarTCERO" onclick="ativarEdicaoTCERO()" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-2xl text-[11px] font-black shadow flex items-center justify-center min-w-[110px]">EDITAR</button>`:''}
+${podeEditar?`<button id="btnSalvarTCERO" onclick="salvarEdicaoTCERO()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-2xl text-[11px] font-black shadow flex items-center justify-center min-w-[110px]" hidden>SALVAR</button>`:''}
+</div>
+<div class="overflow-x-auto rounded-3xl bg-white/60 backdrop-blur-sm shadow-[0_8px_30px_rgba(0,0,0,.06)]">
+<table class="w-full min-w-[1100px] border-separate border-spacing-y-2">
+<thead>
+<tr class="text-[11px] uppercase font-black text-slate-700">
+<th class="text-left px-4 py-3">Nome</th>
+<th class="text-left px-4 py-3">Usuário</th>
+<th class="text-left px-4 py-3">Cargo</th>
+<th class="text-center px-4 py-3">Nível</th>
+<th class="text-center px-4 py-3">PDF</th>
+<th class="text-center px-4 py-3">Ações</th>
+</tr>
+</thead>
+<tbody>
+${data.map(p=>`
+<tr class="linha-tcero bg-white/92 hover:bg-amber-50 transition shadow-[0_4px_18px_rgba(0,0,0,0.05)]" data-id="${p.id}">
+<td class="px-3 py-2 rounded-l-2xl">
+<input id="nome_${p.id}" value="${p.nome_completo||''}" disabled class="campo-editavel-tcero opacity-70 w-full bg-transparent text-[13px] font-black outline-none border-none">
+</td>
+<td class="px-3 py-2">
+<input id="user_${p.id}" value="${p.username||''}" disabled class="campo-editavel-tcero opacity-70 w-full bg-transparent text-[12px] font-bold outline-none border-none text-blue-900">
+</td>
+<td class="px-3 py-2">
+<input id="cargo_${p.id}" value="${p.cargo||''}" disabled class="campo-editavel-tcero opacity-70 w-full bg-transparent text-[12px] font-semibold outline-none border-none">
+</td>
+<td class="px-3 py-2 text-center">
+<select id="nivel_${p.id}" disabled class="campo-editavel-tcero opacity-70 bg-blue-100 text-blue-700 px-2 py-1 rounded-xl text-[11px] font-black border-none outline-none">
+<option value="1" ${Number(p.nivel_acesso)===1?'selected':''}>Nível 1</option>
+<option value="2" ${Number(p.nivel_acesso)===2?'selected':''}>Nível 2</option>
+<option value="3" ${Number(p.nivel_acesso)===3?'selected':''}>Nível 3</option>
+<option value="4" ${Number(p.nivel_acesso)===4?'selected':''}>Nível 4</option>
+</select>
+</td>
+<td class="px-3 py-2 text-center">
+<select id="pdf_${p.id}" ${Number(p.nivel_acesso)!==1?'disabled':''} class="campo-editavel-tcero opacity-70 bg-amber-100 text-amber-700 px-2 py-1 rounded-xl text-[11px] font-black border-none outline-none">
+<option value="SIM" ${p.permissao_pdf?'selected':''}>COM PDF</option>
+<option value="NAO" ${!p.permissao_pdf?'selected':''}>SEM PDF</option>
+</select>
+</td>
+<td class="px-3 py-2 text-center rounded-r-2xl">
+${podeEditar?`<button onclick="excluirTCERO('${p.id}')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-xl text-[10px] font-black shadow">EXCLUIR</button>`:''}
+</td>
+</tr>
+`).join('')}
+</tbody>
+</table>
+</div>`
+
+}
+</script>
+  
+  
+</body>
+</html>
