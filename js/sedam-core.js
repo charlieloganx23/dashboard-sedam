@@ -83,53 +83,45 @@ return
 
 let perfil=null
 
+// ============================================
+// US-001: Autenticação segura com bcrypt
+// ============================================
+// Tenta autenticar como TCE-RO primeiro
 let {data:p1,error:e1}=await client
-.from('perfistce')
-.select('*')
-.eq('username',usuario)
-.eq('senha',senha)
-.limit(1)
+.rpc('autenticar_tcero',{
+  p_username:usuario,
+  p_senha_plana:senha
+})
 
 if(e1){
-console.log(e1)
+console.error('Erro ao autenticar TCE-RO:',e1)
 }
 
-if(p1&&p1.length){
-
+// Se retornou dados, usuário é TCE-RO
+if(p1&&p1.length>0){
 perfil=p1[0]
 perfil.origem='TCERO'
-
 }else{
-
+// Se não é TCE-RO, tenta SEDAM
 let {data:p2,error:e2}=await client
-.from('perfis')
-.select('*')
-.eq('username',usuario)
-.limit(1)
+.rpc('autenticar_sedam',{
+  p_username:usuario,
+  p_senha_plana:senha
+})
 
 if(e2){
-console.log(e2)
+console.error('Erro ao autenticar SEDAM:',e2)
 }
 
-if(p2&&p2.length){
-
+if(p2&&p2.length>0){
 perfil=p2[0]
 perfil.origem='SEDAM'
-
-if(
-perfil.senha&&
-String(perfil.senha)!==String(senha)
-){
-alert('Senha inválida')
-return
+}
 }
 
-}
-
-}
-
+// Se nenhum dos dois autenticou, credenciais inválidas
 if(!perfil){
-alert('Usuário não encontrado')
+alert('Usuário ou senha inválidos')
 return
 }
 
@@ -939,10 +931,25 @@ if(!nome||!usuario||!senha){
 alert('Preencha nome, usuário e senha')
 return
 }
+
+// ============================================
+// US-001: Gerar hash da senha antes de inserir
+// ============================================
+let {data:hashData,error:hashError}=await client
+.rpc('hash_senha',{p_senha_plana:senha})
+
+if(hashError){
+console.error('Erro ao gerar hash:',hashError)
+alert('Erro ao processar senha')
+return
+}
+
+let senhaHash=hashData
+
 let {error}=await client.from('perfis').insert([{
 nome_completo:nome,
 username:usuario,
-senha:senha,
+senha_hash:senhaHash,
 cargo:cargo,
 nivel_acesso:Number(nivel)
 }])

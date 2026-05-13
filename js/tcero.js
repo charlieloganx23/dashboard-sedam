@@ -78,11 +78,34 @@ if(!nome||!user){
 alert('Preencha nome e usuário')
 return
 }
-let payload={nome_completo:nome,username:user,senha:senha,cargo:cargo,nivel_acesso:nivel,permissao_pdf:permissao_pdf}
+
+let payload={nome_completo:nome,username:user,cargo:cargo,nivel_acesso:nivel,permissao_pdf:permissao_pdf}
+
+// ============================================
+// US-001: Gerar hash se senha foi fornecida
+// ============================================
+if(senha&&senha.trim()!==''){
+let {data:hashData,error:hashError}=await client
+.rpc('hash_senha',{p_senha_plana:senha})
+
+if(hashError){
+console.error('Erro ao gerar hash:',hashError)
+alert('Erro ao processar senha')
+return
+}
+
+payload.senha_hash=hashData
+}
+
 let res=null
 if(window.editTCEROId){
 res=await client.from('perfistce').update(payload).eq('id',window.editTCEROId)
 }else{
+// Insert requer senha
+if(!senha||senha.trim()===''){
+alert('Senha é obrigatória para novo perfil')
+return
+}
 res=await client.from('perfistce').insert(payload)
 }
 if(res.error){
