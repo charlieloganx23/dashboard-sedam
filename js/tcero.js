@@ -56,12 +56,29 @@ let nome=document.getElementById('nome_'+id)?.value||''
 let username=document.getElementById('user_'+id)?.value||''
 let cargo=document.getElementById('cargo_'+id)?.value||''
 let nivel=document.getElementById('nivel_'+id)?.value||1
-let {error}=await client.from('perfistce').update({nome_completo:nome,username:username,cargo:cargo,nivel_acesso:Number(nivel)}).eq('id',id)
+
+// US-002: Usar RPC para atualizar perfil
+let {data,error}=await client.rpc('atualizar_perfil_tcero',{
+p_id:Number(id),
+p_nome_completo:nome,
+p_username:username,
+p_senha_plana:null, // Não alterar senha nesta operação
+p_cargo:cargo,
+p_nivel_acesso:String(nivel),
+p_permissao_pdf:false // Manter valor atual (não modificado por esta função)
+})
+
 if(error){
 console.error(error)
 alert('Erro ao salvar')
 return
 }
+
+if(data && data.error){
+alert('Erro: '+data.error)
+return
+}
+
 await carregarTCERO()
 }
 /*=========================================================
@@ -79,38 +96,41 @@ alert('Preencha nome e usuário')
 return
 }
 
-let payload={nome_completo:nome,username:user,cargo:cargo,nivel_acesso:nivel,permissao_pdf:permissao_pdf}
-
-// ============================================
-// US-001: Gerar hash se senha foi fornecida
-// ============================================
-if(senha&&senha.trim()!==''){
-let {data:hashData,error:hashError}=await client
-.rpc('hash_senha',{p_senha_plana:senha})
-
-if(hashError){
-console.error('Erro ao gerar hash:',hashError)
-alert('Erro ao processar senha')
-return
-}
-
-payload.senha_hash=hashData
-}
-
-let res=null
+// US-002: Usar RPC para criar ou atualizar perfil
+let result=null
 if(window.editTCEROId){
-res=await client.from('perfistce').update(payload).eq('id',window.editTCEROId)
+// Atualizar perfil existente
+result=await client.rpc('atualizar_perfil_tcero',{
+p_id:Number(window.editTCEROId),
+p_nome_completo:nome,
+p_username:user,
+p_senha_plana:senha!==''?senha:null,
+p_cargo:cargo,
+p_nivel_acesso:String(nivel),
+p_permissao_pdf:permissao_pdf
+})
 }else{
-// Insert requer senha
+// Criar novo perfil
 if(!senha||senha.trim()===''){
 alert('Senha é obrigatória para novo perfil')
 return
 }
-res=await client.from('perfistce').insert(payload)
+result=await client.rpc('criar_perfil_tcero',{
+p_nome_completo:nome,
+p_username:user,
+p_senha_plana:senha,
+p_cargo:cargo,
+p_nivel_acesso:String(nivel),
+p_permissao_pdf:permissao_pdf
+})
 }
-if(res.error){
-console.error(res.error)
+if(result.error){
+console.error(result.error)
 alert('Erro ao salvar')
+return
+}
+if(result.data && result.data.error){
+alert('Erro: '+result.data.error)
 return
 }
 window.editTCEROId=null
@@ -165,14 +185,17 @@ if(!confirm('Excluir perfil '+(p.nome_completo||'')+' ?')){
 return
 }
 
-let {error}=await client
-.from('perfistce')
-.delete()
-.eq('id',id)
+// US-002: Usar RPC para deletar perfil (soft delete + validações)
+let {data,error}=await client.rpc('deletar_perfil_tcero',{p_id:Number(id)})
 
 if(error){
 console.error(error)
 alert('Erro ao excluir')
+return
+}
+
+if(data && data.error){
+alert('Erro: '+data.error)
 return
 }
 
@@ -223,17 +246,26 @@ let cargo=document.getElementById('cargo_'+id)?.value||''
 let senha=document.getElementById('senha_'+id)?.value||''
 let nivel=document.getElementById('nivel_'+id)?.value||1
 let permissao=document.getElementById('pdf_'+id)?.value==='SIM'
-let {error}=await client.from('perfistce').update({
-nome_completo:nome,
-username:username,
-cargo:cargo,
-senha:senha,
-nivel_acesso:Number(nivel),
-permissao_pdf:permissao
-}).eq('id',id)
+
+// US-002: Usar RPC para atualizar perfil
+let {data,error}=await client.rpc('atualizar_perfil_tcero',{
+p_id:Number(id),
+p_nome_completo:nome,
+p_username:username,
+p_senha_plana:senha!==''?senha:null,
+p_cargo:cargo,
+p_nivel_acesso:String(nivel),
+p_permissao_pdf:permissao
+})
+
 if(error){
 console.error(error)
 alert('Erro ao salvar alterações')
+return
+}
+
+if(data && data.error){
+alert('Erro: '+data.error)
 return
 }
 }
@@ -259,7 +291,8 @@ async function carregarTCERO(){
 let lista=document.getElementById('listaTCERO')
 if(!lista)return
 lista.innerHTML='<div class="p-3 text-[11px] font-black">Carregando Perfis TCE-RO...</div>'
-let {data,error}=await client.from('perfistce').select('*').order('nome_completo',{ascending:true})
+// US-002: Usar RPC para listar perfis (não expõe senha_hash)
+let {data,error}=await client.rpc('listar_perfis_tcero')
 if(error){
 console.error(error)
 lista.innerHTML='<div class="p-3 text-red-700 text-[11px] font-black">Erro ao carregar.</div>'

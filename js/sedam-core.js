@@ -680,7 +680,8 @@ return`
 =========================================================*/
 async function carregarUsuarios(){
 if(!userP)return
-let {data,error}=await client.from('perfis').select('id,nome_completo,username,nivel_acesso').order('nome_completo')
+// US-002: Usar RPC para listar perfis (não expõe senha_hash)
+let {data,error}=await client.rpc('listar_perfis_sedam')
 if(error){
 console.error(error)
 return
@@ -703,12 +704,12 @@ let isTCERO=(userP.origem||'')==='TCERO'
 if(isTCERO&&!['manoel','vagner','gleidi'].includes((userP.username||'').toLowerCase())){
 return
 }
-let query=client.from('perfis').select('*').order('nome_completo')
+// US-002: Usar RPC para listar perfis (não expõe senha_hash)
 if(!isAdminSedam){
 document.getElementById('listaPerfis').innerHTML=''
 return
 }
-let {data,error}=await query
+let {data,error}=await client.rpc('listar_perfis_sedam')
 if(error){
 console.error(error)
 return
@@ -878,26 +879,27 @@ let nome=document.getElementById('nome_sedam_'+id)?.value||''
 let username=document.getElementById('user_sedam_'+id)?.value||''
 let senha=document.getElementById('senha_sedam_'+id)?.value||''
 let cargo=document.getElementById('cargo_sedam_'+id)?.value||''
-let setor=document.getElementById('setor_sedam_'+id)?.value||''
 let nivel=document.getElementById('nivel_sedam_'+id)?.value||4
 
-let payload={
-nome_completo:nome,
-username:username,
-cargo:cargo,
-setor:setor,
-nivel_acesso:Number(nivel)
-}
-
-if(String(senha||'').trim()!==''){
-payload.senha=senha
-}
-
-let {error}=await client.from('perfis').update(payload).eq('id',id)
+// US-002: Usar RPC para atualizar perfil (com hash de senha)
+let {data,error}=await client.rpc('atualizar_perfil_sedam',{
+p_id:Number(id),
+p_nome_completo:nome,
+p_username:username,
+p_senha_plana:String(senha||'').trim()!==''?senha:null,
+p_cargo:cargo,
+p_nivel_acesso:String(nivel)
+})
 
 if(error){
 console.error(error)
 alert('Erro ao salvar')
+return
+}
+
+// Verificar se RPC retornou erro
+if(data && data.error){
+alert('Erro: '+data.error)
 return
 }
 }
@@ -932,32 +934,27 @@ alert('Preencha nome, usuário e senha')
 return
 }
 
-// ============================================
-// US-001: Gerar hash da senha antes de inserir
-// ============================================
-let {data:hashData,error:hashError}=await client
-.rpc('hash_senha',{p_senha_plana:senha})
+// US-002: Usar RPC para criar perfil (valida e hasheia automaticamente)
+let {data,error}=await client.rpc('criar_perfil_sedam',{
+p_nome_completo:nome,
+p_username:usuario,
+p_senha_plana:senha,
+p_cargo:cargo,
+p_nivel_acesso:String(nivel)
+})
 
-if(hashError){
-console.error('Erro ao gerar hash:',hashError)
-alert('Erro ao processar senha')
-return
-}
-
-let senhaHash=hashData
-
-let {error}=await client.from('perfis').insert([{
-nome_completo:nome,
-username:usuario,
-senha_hash:senhaHash,
-cargo:cargo,
-nivel_acesso:Number(nivel)
-}])
 if(error){
 console.error(error)
 alert('Erro ao inserir perfil')
 return
 }
+
+// Verificar se RPC retornou erro
+if(data && data.error){
+alert('Erro: '+data.error)
+return
+}
+
 alert('Perfil inserido com sucesso')
 await carregarPerfis()
 }

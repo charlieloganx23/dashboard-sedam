@@ -8,11 +8,14 @@ Scripts de banco de dados para melhorias de segurança e manutenção.
 
 Execute os scripts **NA ORDEM NUMÉRICA** no **Supabase SQL Editor**.
 
-| # | Arquivo | Descrição | Requer Backup? |
-|---|---|---|---|
-| 1 | `01-enable-pgcrypto.sql` | Habilita extensão de criptografia | ❌ Não |
-| 2 | `02-create-auth-functions.sql` | Cria funções de autenticação bcrypt | ❌ Não |
-| 3 | `03-migrate-passwords.sql` | **Migra senhas para hash** | ✅ **SIM - CRÍTICO** |
+| # | Arquivo | Descrição | User Story | Requer Backup? |
+|---|---|---|---|---|
+| 1 | `01-enable-pgcrypto.sql` | Habilita extensão de criptografia | US-001 | ❌ Não |
+| 2 | `02-create-auth-functions.sql` | Cria funções de autenticação bcrypt | US-001 | ❌ Não |
+| 3 | `03-migrate-passwords.sql` | **Migra senhas para hash** | US-001 | ✅ **SIM - CRÍTICO** |
+| 4 | `04-enable-rls.sql` | Ativa Row Level Security | US-002 | ✅ **SIM** |
+| 5 | `05-create-rls-policies.sql` | Cria policies de segurança | US-002 | ❌ Não |
+| 6 | `06-create-crud-functions.sql` | Cria funções RPC seguras | US-002 | ❌ Não |
 
 ---
 
@@ -22,8 +25,15 @@ Execute os scripts **NA ORDEM NUMÉRICA** no **Supabase SQL Editor**.
 
 1. **Fazer backup completo do banco de dados**
 2. **Testar primeiro em staging**
-3. **Ler a documentação:** [docs/US-001-IMPLEMENTACAO.md](../docs/US-001-IMPLEMENTACAO.md)
+3. **Ler a documentação:**
+   - US-001: [docs/US-001-IMPLEMENTACAO.md](../docs/US-001-IMPLEMENTACAO.md)
+   - US-002: [docs/US-002-IMPLEMENTACAO.md](../docs/US-002-IMPLEMENTACAO.md)
 4. **Executar fora do horário comercial**
+
+### Dependências
+
+- **Scripts 04-06 requerem scripts 01-03 executados ANTES**
+- US-002 depende de US-001 (bcrypt configurado)
 
 ---
 
