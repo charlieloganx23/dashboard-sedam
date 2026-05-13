@@ -261,32 +261,5 @@ Consulte [docs/BACKLOG-MELHORIAS.md](docs/BACKLOG-MELHORIAS.md) para o roadmap c
 
 ---
 
-## 📞 Contato e Suporte
-
-- **Projeto Oficial:** [projetosetags/dashboard-sedam](https://github.com/projetosetags/dashboard-sedam)
-- **Fork (desenvolvimento):** [charlieloganx23/dashboard-sedam](https://github.com/charlieloganx23/dashboard-sedam)
-- **Issues:** [Abrir issue](https://github.com/charlieloganx23/dashboard-sedam/issues)
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença **MIT**. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-## 🙏 Agradecimentos
-
-- **SEDAM-RO** — Secretaria de Estado do Desenvolvimento Ambiental
-- **TCE-RO** — Tribunal de Contas do Estado de Rondônia
-- **Equipe de Desenvolvimento** — Todos os contribuidores do projeto
-
----
-
-<div align="center">
-
-**Desenvolvido com ❤️ para a SEDAM-RO**
-
-[⬆ Voltar ao topo](#-dashboard-sedam-2026)
 
 </div>
